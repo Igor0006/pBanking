@@ -1,4 +1,4 @@
-package com.example.pbanking;
+package com.example.pbanking.service;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;

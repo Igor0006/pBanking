@@ -1,4 +1,4 @@
-package com.example.pbanking;
+package com.example.pbanking.config;
 
 import java.time.Duration;
 
