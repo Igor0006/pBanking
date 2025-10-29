@@ -27,8 +27,8 @@ public class BankController {
 
         String token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZWFtMDYyLTEiLCJ0eXBlIjoiY2xpZW50IiwiYmFuayI6InNlbGYiLCJleHAiOjE3NjE4MjIwNTl9.hgHkEPKlrVatqDzxcUG0ef4QOfFVAAX1qFTHvVUox1M";
 
-        var response = wc.get(baseUrl, path, queryParams, token, AccountsResponse.class);
-    System.out.println(response);
+        var response = wc.get(baseUrl, path, queryParams,null, token, AccountsResponse.class);
+    System.out.println(response.getData().getAccount().get(0).getAccountId());
 }
     
 }

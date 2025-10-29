@@ -17,7 +17,7 @@ import lombok.RequiredArgsConstructor;
 public class WebClientExecutor {
     private final WebClient webClient;
 
-    public <T> T get(String baseUrl, String path, Map<String, ?> queryParams, String token, Class<T> responseType) {
+    public <T> T get(String baseUrl, String path, Map<String, ?> queryParams, Map<String, String> headers, String token, Class<T> responseType) {
         URI uri = UrlBuilder.from(baseUrl)
                 .path(path)
                 .queryMap(queryParams)
@@ -28,6 +28,8 @@ public class WebClientExecutor {
                     .headers(h -> {
                         if (token != null)
                             h.setBearerAuth(token);
+                        if (headers != null)
+                            headers.forEach(h::add);
                     })
                     .retrieve()
                     .bodyToMono(responseType)
@@ -38,7 +40,7 @@ public class WebClientExecutor {
         }
     }
 
-    public <B, T> T post(String baseUrl, String path, B body, String token, Class<T> responseType) {
+    public <B, T> T post(String baseUrl, String path, B body, String token, Map<String, String> headers, Class<T> responseType) {
         URI uri = UrlBuilder.from(baseUrl)
                 .path(path)
                 .build();
@@ -48,6 +50,8 @@ public class WebClientExecutor {
                     .headers(h -> {
                         if (token != null)
                             h.setBearerAuth(token);
+                        if (headers != null)
+                            headers.forEach(h::add);
                     })
                     .bodyValue(body)
                     .retrieve()
@@ -59,7 +63,7 @@ public class WebClientExecutor {
         }
     }
 
-    public void postVoid(String baseUrl, String path, Object body, String token) {
+    public void postVoid(String baseUrl, String path, Map<String, String> headers, Object body, String token) {
         URI uri = UrlBuilder.from(baseUrl)
                 .path(path)
                 .build();
@@ -70,10 +74,11 @@ public class WebClientExecutor {
                     .headers(h -> {
                         if (token != null)
                             h.setBearerAuth(token);
+                        headers.forEach(h::add);
                     })
                     .bodyValue(body)
                     .retrieve()
-                    .toBodilessEntity()
+                    .bodyToMono(Void.class)
                     .block();
         } catch (WebClientResponseException e) {
             System.err.println("Ошибка запроса: " + e.getStatusCode() + " " + e.getResponseBodyAsString());
