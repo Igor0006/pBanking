@@ -7,6 +7,8 @@ import com.example.pbanking.service.WebClientExecutor;
 
 import lombok.RequiredArgsConstructor;
 
+import java.util.Map;
+
 import org.springframework.web.bind.annotation.GetMapping;
 
 
@@ -15,11 +17,18 @@ import org.springframework.web.bind.annotation.GetMapping;
 public class BankController {
     private final WebClientExecutor wc;
     @GetMapping("/")
-    public void getMethodName() {
-        var response = wc.get("https://abank.open.bankingapi.ru/accounts?client_id=team062-1", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZWFtMDYyLTEiLCJ0eXBlIjoiY2xpZW50IiwiYmFuayI6InNlbGYiLCJleHAiOjE3NjE4MjIwNTl9.hgHkEPKlrVatqDzxcUG0ef4QOfFVAAX1qFTHvVUox1M\n" + //
-                        "", 
-            AccountsResponse.class);
-        System.out.println(response);
-    }
+    public void getAccounts() {
+        String baseUrl = "https://abank.open.bankingapi.ru";
+        String path = "/accounts";
+
+        Map<String, Object> queryParams = Map.of(
+            "client_id", "team062-1"
+        );
+
+        String token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZWFtMDYyLTEiLCJ0eXBlIjoiY2xpZW50IiwiYmFuayI6InNlbGYiLCJleHAiOjE3NjE4MjIwNTl9.hgHkEPKlrVatqDzxcUG0ef4QOfFVAAX1qFTHvVUox1M";
+
+        var response = wc.get(baseUrl, path, queryParams, token, AccountsResponse.class);
+    System.out.println(response);
+}
     
 }

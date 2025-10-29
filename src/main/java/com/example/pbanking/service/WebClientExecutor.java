@@ -1,9 +1,14 @@
 package com.example.pbanking.service;
 
+import java.net.URI;
+import java.util.Map;
+
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+
+import com.example.pbanking.utils.UrlBuilder;
 
 import lombok.RequiredArgsConstructor;
 
@@ -12,11 +17,18 @@ import lombok.RequiredArgsConstructor;
 public class WebClientExecutor {
     private final WebClient webClient;
 
-    public <T> T get(String url, String token, Class<T> responseType) {
+    public <T> T get(String baseUrl, String path, Map<String, ?> queryParams, String token, Class<T> responseType) {
+        URI uri = UrlBuilder.from(baseUrl)
+                .path(path)
+                .queryMap(queryParams)
+                .build();
         try {
             return webClient.get()
-                    .uri(url)
-                    .headers(h -> applyAuthorization(h, token))
+                    .uri(uri)
+                    .headers(h -> {
+                        if (token != null)
+                            h.setBearerAuth(token);
+                    })
                     .retrieve()
                     .bodyToMono(responseType)
                     .block(); // блокируем (обычный вызов)
@@ -26,11 +38,17 @@ public class WebClientExecutor {
         }
     }
 
-    public <B, T> T post(String url, B body, String token, Class<T> responseType) {
+    public <B, T> T post(String baseUrl, String path, B body, String token, Class<T> responseType) {
+        URI uri = UrlBuilder.from(baseUrl)
+                .path(path)
+                .build();
         try {
             return webClient.post()
-                    .uri(url)
-                    .headers(h -> applyAuthorization(h, token))
+                    .uri(uri)
+                    .headers(h -> {
+                        if (token != null)
+                            h.setBearerAuth(token);
+                    })
                     .bodyValue(body)
                     .retrieve()
                     .bodyToMono(responseType)
@@ -41,20 +59,25 @@ public class WebClientExecutor {
         }
     }
 
-    private void applyAuthorization(HttpHeaders headers, String token) {
-        if (token == null) {
-            return;
-        }
+    public void postVoid(String baseUrl, String path, Object body, String token) {
+        URI uri = UrlBuilder.from(baseUrl)
+                .path(path)
+                .build();
 
-        String sanitized = token.strip();
-        if (sanitized.isEmpty()) {
-            return;
-        }
-
-        if (sanitized.length() >= 7 && sanitized.regionMatches(true, 0, "Bearer ", 0, 7)) {
-            headers.set(HttpHeaders.AUTHORIZATION, sanitized);
-        } else {
-            headers.setBearerAuth(sanitized);
+        try {
+            webClient.post()
+                    .uri(uri)
+                    .headers(h -> {
+                        if (token != null)
+                            h.setBearerAuth(token);
+                    })
+                    .bodyValue(body)
+                    .retrieve()
+                    .toBodilessEntity()
+                    .block();
+        } catch (WebClientResponseException e) {
+            System.err.println("Ошибка запроса: " + e.getStatusCode() + " " + e.getResponseBodyAsString());
+            throw e;
         }
     }
 }
