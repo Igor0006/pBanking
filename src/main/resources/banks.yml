@@ -1,0 +1,11 @@
+banks:
+  list:
+    - id: abank
+      name: "A Bank"
+      url: "https://abank.open.bankingapi.ru"
+    - id: vbank
+      name: "V Bank"
+      url: "https://vbank.open.bankingapi.ru"
+    - id: sbank
+      name: "S Bank"
+      url: "https://sbank.open.bankingapi.ru"
