@@ -22,6 +22,7 @@ public class ConsentService {
     private final WebClientExecutor wc;
     private final BanksProperties banks;
     private final UserService userService;
+    private final EncryptionService encryptionService;
     private final ConsentRepository consentRepository;
     
     @Value("${bank.id}")
@@ -50,7 +51,7 @@ public class ConsentService {
         User user = userService.getCurrentUser();
         Consent consent = new Consent();
         consent.setBank(Bank.getBankFromCode(bankId));
-        consent.setConsent(consentId);
+        consent.setConsent(encryptionService.encrypt(consentId));
         consent.setUser(user);
         consentRepository.save(consent);
     }
