@@ -8,8 +8,6 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 
 import com.example.pbanking.config.BanksProperties;
-import com.example.pbanking.model.AccountConsentRequestBody;
-import com.example.pbanking.model.AccountConsentResponse;
 import com.example.pbanking.model.Consent;
 import com.example.pbanking.model.User;
 import com.example.pbanking.model.enums.Bank;
@@ -25,7 +23,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ConsentService {
     private final WebClientExecutor wc;
-    private final BanksProperties banks;
     private final UserService userService;
     private final EncryptionService encryptionService;
     private final ConsentRepository consentRepository;
@@ -47,11 +44,9 @@ public class ConsentService {
             "Content-Type", MediaType.APPLICATION_JSON_VALUE
         );
         // var
-        AccountConsentResponse response = wc.post(base_url, "/account-consents/request", requestBody, headers, bank_token, AccountConsentResponse.class);
-        System.out.println(response);
+        String path = "/account-consents/request";
+        AccountConsentResponse response = wc.post(bank_id, path, requestBody, null, headers, bank_token, AccountConsentResponse.class);
         saveConsents(response, bank_id, ConsentType.READ);
-        String consent = getConsentForBank(bank_id, ConsentType.READ);
-        System.out.println(consent);
     }
 
     public String getConsentForBank(String bankId, ConsentType consentType) {
