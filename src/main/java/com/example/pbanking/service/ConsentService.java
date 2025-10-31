@@ -1,5 +1,6 @@
 package com.example.pbanking.service;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -12,6 +13,7 @@ import com.example.pbanking.model.AccountConsentResponse;
 import com.example.pbanking.model.Consent;
 import com.example.pbanking.model.User;
 import com.example.pbanking.model.enums.Bank;
+import com.example.pbanking.model.enums.ConsentType;
 import com.example.pbanking.repository.ConsentRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -42,16 +44,20 @@ public class ConsentService {
             "X-Requesting-Bank", requesting_bank,
             "Content-Type", MediaType.APPLICATION_JSON_VALUE
         );
-        var response = wc.post(base_url, "/account-consents/request", requestBody, headers, bank_token, AccountConsentResponse.class);
+        // var
+        AccountConsentResponse response = wc.post(base_url, "/account-consents/request", requestBody, headers, bank_token, AccountConsentResponse.class);
         System.out.println(response);
-        saveConsents(response.consent_id(), bank_id);
+        saveConsents(response, bank_id, ConsentType.READ);
     }
 
-    private void saveConsents(String consentId, String bankId) {
+    private void saveConsents(AccountConsentResponse response, String bankId, ConsentType consentType) {
         User user = userService.getCurrentUser();
         Consent consent = new Consent();
         consent.setBank(Bank.getBankFromCode(bankId));
-        consent.setConsent(encryptionService.encrypt(consentId));
+        consent.setConsent(encryptionService.encrypt(response.consent_id()));
+        consent.setStatus(response.status());
+        consent.setType(consentType);
+        consent.setExpirationDate(LocalDateTime.now().plusDays(90));
         consent.setUser(user);
         consentRepository.save(consent);
     }
