@@ -16,6 +16,7 @@ import com.example.pbanking.model.enums.Bank;
 import com.example.pbanking.model.enums.ConsentType;
 import com.example.pbanking.repository.ConsentRepository;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -48,6 +49,16 @@ public class ConsentService {
         AccountConsentResponse response = wc.post(base_url, "/account-consents/request", requestBody, headers, bank_token, AccountConsentResponse.class);
         System.out.println(response);
         saveConsents(response, bank_id, ConsentType.READ);
+        String consent = getConsentForBank(bank_id, ConsentType.READ);
+        System.out.println(consent);
+    }
+
+    public String getConsentForBank(String bankId, ConsentType consentType) {
+        User user = userService.getCurrentUser();
+        Consent consent = consentRepository
+        .findByUserAndBankAndType(user, Bank.getBankFromCode(bankId), consentType)
+        .orElseThrow(() -> new EntityNotFoundException("No such consent for bank: " + bankId));
+        return encryptionService.decrypt(consent.getConsent());
     }
 
     private void saveConsents(AccountConsentResponse response, String bankId, ConsentType consentType) {
