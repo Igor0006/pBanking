@@ -15,6 +15,8 @@ import com.example.pbanking.model.User;
 import com.example.pbanking.model.enums.Bank;
 import com.example.pbanking.model.enums.ConsentType;
 import com.example.pbanking.repository.ConsentRepository;
+import com.example.pbanking.dto.AccountConsentRequestBody;
+import com.example.pbanking.dto.AccountConsentResponse;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -40,7 +42,6 @@ public class ConsentService {
         requestBody.setRequesting_bank(requesting_bank);
         requestBody.setRequesting_bank_name(requesting_bank_name);
     
-        String base_url = banks.getUrlMap().get(bank_id);
         Map<String, String> headers = Map.of(
             "X-Requesting-Bank", requesting_bank,
             "Content-Type", MediaType.APPLICATION_JSON_VALUE

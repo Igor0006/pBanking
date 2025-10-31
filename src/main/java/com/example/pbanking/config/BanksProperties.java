@@ -3,7 +3,7 @@ package com.example.pbanking.config;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
-import com.example.pbanking.model.BankEntry;
+import com.example.pbanking.dto.BankEntry;
 
 import java.util.ArrayList;
 import java.util.List;
