@@ -6,8 +6,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 
-import com.example.pbanking.model.AccountConsentRequestBody;
-import com.example.pbanking.model.AccountConsentResponse;
+import com.example.pbanking.dto.AccountConsentRequestBody;
+import com.example.pbanking.dto.AccountConsentResponse;
 
 import lombok.RequiredArgsConstructor;
 

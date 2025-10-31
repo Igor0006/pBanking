@@ -3,7 +3,7 @@ package com.example.pbanking.conroller;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.pbanking.config.BanksProperties;
-import com.example.pbanking.model.AccountsResponse;
+import com.example.pbanking.dto.AccountsResponse;
 import com.example.pbanking.service.BankTokenService;
 import com.example.pbanking.service.ConsentService;
 import com.example.pbanking.service.WebClientExecutor;

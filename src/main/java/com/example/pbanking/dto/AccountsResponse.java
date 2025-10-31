@@ -1,4 +1,4 @@
-package com.example.pbanking.model;
+package com.example.pbanking.dto;
 
 import lombok.Data;
 import java.util.List;
