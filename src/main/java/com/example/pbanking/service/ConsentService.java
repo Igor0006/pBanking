@@ -32,7 +32,7 @@ public class ConsentService {
             "X-Requesting-Bank", requesting_bank,
             "Content-Type", MediaType.APPLICATION_JSON_VALUE
         );
-        var response = wc.post(bank_id, "/account-consents/request", requestBody, headers, bank_token, AccountConsentResponse.class);
+        var response = wc.post(bank_id, "/account-consents/request", requestBody, null, headers, bank_token, AccountConsentResponse.class);
         System.out.println(response);
     }
 }

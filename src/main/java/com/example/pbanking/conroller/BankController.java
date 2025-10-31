@@ -4,6 +4,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.pbanking.config.BanksProperties;
 import com.example.pbanking.model.AccountsResponse;
+import com.example.pbanking.service.BankTokenService;
 import com.example.pbanking.service.ConsentService;
 import com.example.pbanking.service.WebClientExecutor;
 
@@ -20,6 +21,7 @@ public class BankController {
     private final WebClientExecutor wc;
     private final BanksProperties banks;
     private final ConsentService consentService;
+    private final BankTokenService tokenService;
     
     @GetMapping("/")
     public void getAccounts() {
@@ -38,7 +40,7 @@ public class BankController {
     // не забыть нормально эндпоинт сделать
     @GetMapping("/account-consent")
     public void stabName() {
-        String token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZWFtMDYyIiwiY2xpZW50X2lkIjoidGVhbTA2MiIsInR5cGUiOiJ0ZWFtIiwiaXNzIjoiYWJhbmsiLCJhdWQiOiJvcGVuYmFua2luZyIsImV4cCI6MTc2MTkxNjgzNn0.Whz4kpWUyYDgbv232MCj4WF-iXDRirYLdasiWBdivT8";
+        String token = tokenService.getBankToken("abank");
         consentService.getReadConsent("abank", "team062-1", token);
     }
 }

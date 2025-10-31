@@ -4,7 +4,11 @@ import java.net.URI;
 import java.util.Map;
 
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
@@ -21,6 +25,9 @@ public class WebClientExecutor {
 
     public <T> T get(String bank_id, String path, Map<String, ?> queryParams, Map<String, String> headers, String token, Class<T> responseType) {
         String baseUrl = banks.getUrlMap().get(bank_id);
+        if (baseUrl == null) {
+            throw new IllegalArgumentException("Unknown bank_id: " + bank_id);
+        }
         URI uri = UrlBuilder.from(baseUrl)
                 .path(path)
                 .queryMap(queryParams)
@@ -38,16 +45,20 @@ public class WebClientExecutor {
         }
     }
 
-    public <B, T> T post(String bank_id, String path, B body, Map<String, String> headers, String token, Class<T> responseType) {
+    public <B, T> T post(String bank_id, String path, B body, Map<String, ?> queryParams, Map<String, String> headers, String token, Class<T> responseType) {
         String baseUrl = banks.getUrlMap().get(bank_id);
+        if (baseUrl == null) {
+            throw new IllegalArgumentException("Unknown bank_id: " + bank_id);
+        }
         URI uri = UrlBuilder.from(baseUrl)
                 .path(path)
+                .queryMap(queryParams)
                 .build();
         try {
             return webClient.post()
                     .uri(uri)
                     .headers(h -> applyHeaders(h, headers, token))
-                    .bodyValue(body)
+                    .body(body == null ? BodyInserters.empty() : BodyInserters.fromValue(body))
                     .retrieve()
                     .bodyToMono(responseType)
                     .block();
@@ -57,17 +68,22 @@ public class WebClientExecutor {
         }
     }
 
-    public void postVoid(String bank_id, String path, Map<String, String> headers, Object body, String token) {
+    public void postVoid(String bank_id, String path, Object body, Map<String, ?> queryParams, Map<String, String> headers,
+            String token) {
         String baseUrl = banks.getUrlMap().get(bank_id);
+        if (baseUrl == null) {
+            throw new IllegalArgumentException("Unknown bank_id: " + bank_id);
+        }
         URI uri = UrlBuilder.from(baseUrl)
                 .path(path)
+                .queryMap(queryParams)
                 .build();
 
         try {
             webClient.post()
                     .uri(uri)
                     .headers(h -> applyHeaders(h, headers, token))
-                    .bodyValue(body)
+                    .body(body == null ? BodyInserters.empty() : BodyInserters.fromValue(body))
                     .retrieve()
                     .bodyToMono(Void.class)
                     .block();
