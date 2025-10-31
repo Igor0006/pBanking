@@ -1,6 +1,6 @@
 package com.example.pbanking.model;
 
-import com.example.pbanking.dto.enums.Bank;
+import com.example.pbanking.model.enums.Bank;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

@@ -2,7 +2,7 @@ package com.example.pbanking.dto;
 
 import java.util.UUID;
 
-import com.example.pbanking.dto.enums.Bank;
+import com.example.pbanking.model.enums.Bank;
 
 // Test request
 public record AddConsentRequest(

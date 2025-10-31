@@ -9,6 +9,10 @@ import org.springframework.stereotype.Service;
 import com.example.pbanking.config.BanksProperties;
 import com.example.pbanking.model.AccountConsentRequestBody;
 import com.example.pbanking.model.AccountConsentResponse;
+import com.example.pbanking.model.Consent;
+import com.example.pbanking.model.User;
+import com.example.pbanking.model.enums.Bank;
+import com.example.pbanking.repository.ConsentRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -17,6 +21,8 @@ import lombok.RequiredArgsConstructor;
 public class ConsentService {
     private final WebClientExecutor wc;
     private final BanksProperties banks;
+    private final UserService userService;
+    private final ConsentRepository consentRepository;
     
     @Value("${bank.id}")
     private String requesting_bank;
@@ -37,5 +43,15 @@ public class ConsentService {
         );
         var response = wc.post(base_url, "/account-consents/request", requestBody, headers, bank_token, AccountConsentResponse.class);
         System.out.println(response);
+        saveConsents(response.consent_id(), bank_id);
+    }
+
+    private void saveConsents(String consentId, String bankId) {
+        User user = userService.getCurrentUser();
+        Consent consent = new Consent();
+        consent.setBank(Bank.getBankFromCode(bankId));
+        consent.setConsent(consentId);
+        consent.setUser(user);
+        consentRepository.save(consent);
     }
 }
