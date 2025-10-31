@@ -4,15 +4,20 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.pbanking.config.BanksProperties;
 import com.example.pbanking.dto.AccountsResponse;
+import com.example.pbanking.dto.BankEntry;
 import com.example.pbanking.service.BankTokenService;
 import com.example.pbanking.service.ConsentService;
 import com.example.pbanking.service.WebClientExecutor;
 
 import lombok.RequiredArgsConstructor;
 
+import java.util.List;
 import java.util.Map;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+
 
 
 @RestController
@@ -36,6 +41,14 @@ public class BankController {
         var response = wc.get(banks.getUrlMap().get("abank"), path, queryParams,null, token, AccountsResponse.class);
         System.out.println(response.getData().getAccount().get(0).getAccountId());
     }
+    
+    @GetMapping("/api/banks")
+    public ResponseEntity<List<BankEntry>> getMethodName() {
+        return ResponseEntity
+                .status(HttpStatus.ACCEPTED)
+                .body(banks.getList());
+    }
+    
     
     // не забыть нормально эндпоинт сделать
     @GetMapping("/account-consent")
