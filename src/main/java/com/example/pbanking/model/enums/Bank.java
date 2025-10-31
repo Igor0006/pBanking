@@ -1,4 +1,4 @@
-package com.example.pbanking.dto.enums;
+package com.example.pbanking.model.enums;
 
 import java.util.Arrays;
 
@@ -31,7 +31,14 @@ public enum Bank {
     @JsonCreator
     public Bank fromCode(String code) {
         return Arrays.stream(values())
-                .filter(bank -> bank.code.equals(code))
+                .filter(bank -> bank.code.equalsIgnoreCase(code))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Unknown bank: " + code));
+    }
+
+    public static Bank getBankFromCode(String code) {
+        return Arrays.stream(values())
+                .filter(bank -> bank.code.equalsIgnoreCase(code))
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Unknown bank: " + code));
     }

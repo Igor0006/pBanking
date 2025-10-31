@@ -1,6 +1,9 @@
 package com.example.pbanking.model;
 
-import com.example.pbanking.dto.enums.Bank;
+import java.time.LocalDateTime;
+
+import com.example.pbanking.model.enums.Bank;
+import com.example.pbanking.model.enums.ConsentType;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -26,4 +29,10 @@ public class Consent {
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
+
+    @Enumerated(EnumType.STRING)
+    private ConsentType type;
+
+    private String status;
+    private LocalDateTime expirationDate;
 }

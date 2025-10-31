@@ -18,6 +18,11 @@ public class UserService {
     private final UserRepository userRepository;
     private final ConsentRepository consentRepository;
 
+    // TODO: В будущем получение юзера через SecurityContextHolder
+    public User getCurrentUser() {
+        return userRepository.findAll().get(0);
+    }
+
     public void createUser(CreateUserRequest request) {
         User user = new User(request.username(), request.password());
         userRepository.save(user);
