@@ -6,7 +6,6 @@ import com.example.pbanking.config.BanksProperties;
 import com.example.pbanking.model.AccountsResponse;
 import com.example.pbanking.service.ConsentService;
 import com.example.pbanking.service.WebClientExecutor;
-import com.fasterxml.jackson.core.JsonProcessingException;
 
 import lombok.RequiredArgsConstructor;
 

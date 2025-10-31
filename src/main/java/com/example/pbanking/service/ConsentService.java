@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 
-import com.example.pbanking.config.BanksProperties;
 import com.example.pbanking.model.AccountConsentRequestBody;
 import com.example.pbanking.model.AccountConsentResponse;
 
@@ -16,7 +15,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ConsentService {
     private final WebClientExecutor wc;
-    private final BanksProperties banks;
     
     @Value("${bank.id}")
     private String requesting_bank;
@@ -30,12 +28,11 @@ public class ConsentService {
         requestBody.setRequesting_bank(requesting_bank);
         requestBody.setRequesting_bank_name(requesting_bank_name);
     
-        String base_url = banks.getUrlMap().get(bank_id);
         Map<String, String> headers = Map.of(
             "X-Requesting-Bank", requesting_bank,
             "Content-Type", MediaType.APPLICATION_JSON_VALUE
         );
-        var response = wc.post(base_url, "/account-consents/request", requestBody, headers, bank_token, AccountConsentResponse.class);
+        var response = wc.post(bank_id, "/account-consents/request", requestBody, headers, bank_token, AccountConsentResponse.class);
         System.out.println(response);
     }
 }
