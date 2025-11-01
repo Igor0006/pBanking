@@ -4,6 +4,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.pbanking.config.BanksProperties;
 import com.example.pbanking.dto.AccountsResponse.Account;
+import com.example.pbanking.dto.AvailableProductsResponse.Product;
 import com.example.pbanking.dto.BankEntry;
 import com.example.pbanking.dto.TransactionsResponse;
 import com.example.pbanking.service.BankTokenService;
@@ -15,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.catalina.connector.Response;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -39,6 +41,12 @@ public class BankController {
                 .body(banks.getList());
     }
     
+    @GetMapping("/api/availableProducts/{bank_id}")
+    public ResponseEntity<List<Product>> getAvailableProducts(@PathVariable String bank_id) {
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(dataService.getAvailableProducts(bank_id));
+    }
+    
+    
     @GetMapping("/api/accounts/{bank_id}")
     public ResponseEntity<List<Account>> getUserBankAccounts(@PathVariable String bank_id) {
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(dataService.getAccounts(bank_id, "team062-1"));
@@ -55,6 +63,7 @@ public class BankController {
                                 
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(dataService.getTransactions(bank_id, account_id, queryMap));
     }
+    
     
     
     // не забыть нормально эндпоинт сделать
