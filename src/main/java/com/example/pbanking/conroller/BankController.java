@@ -4,49 +4,59 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.pbanking.config.BanksProperties;
 import com.example.pbanking.dto.AccountsResponse;
+import com.example.pbanking.dto.AccountsResponse.Account;
 import com.example.pbanking.dto.BankEntry;
+import com.example.pbanking.dto.TransactionsResponse;
 import com.example.pbanking.service.BankTokenService;
 import com.example.pbanking.service.ConsentService;
+import com.example.pbanking.service.DataRecieveService;
 import com.example.pbanking.service.WebClientExecutor;
 
 import lombok.RequiredArgsConstructor;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
+
 
 
 
 @RestController
 @RequiredArgsConstructor
 public class BankController {
-    private final WebClientExecutor wc;
     private final BanksProperties banks;
     private final ConsentService consentService;
     private final BankTokenService tokenService;
-    
-    @GetMapping("/")
-    public void getAccounts() {
-        String path = "/accounts";
-
-        Map<String, Object> queryParams = Map.of(
-            "client_id", "team062-1"
-        );
-
-        String token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZWFtMDYyLTEiLCJ0eXBlIjoiY2xpZW50IiwiYmFuayI6InNlbGYiLCJleHAiOjE3NjE4MjIwNTl9.hgHkEPKlrVatqDzxcUG0ef4QOfFVAAX1qFTHvVUox1M";
-
-        var response = wc.get(banks.getUrlMap().get("abank"), path, queryParams,null, token, AccountsResponse.class);
-        System.out.println(response.getData().getAccount().get(0).getAccountId());
-    }
+    private final DataRecieveService dataService;
     
     @GetMapping("/api/banks")
-    public ResponseEntity<List<BankEntry>> getMethodName() {
+    public ResponseEntity<List<BankEntry>> getAvailableBanks() {
         return ResponseEntity
                 .status(HttpStatus.ACCEPTED)
                 .body(banks.getList());
+    }
+    
+    @GetMapping("/api/accounts/{bank_id}")
+    public ResponseEntity<List<Account>> getUserBankAccounts(@PathVariable String bank_id) {
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(dataService.getAccounts(bank_id));
+    }
+    
+    @GetMapping("/api/transactions/{bank_id}/{account_id}")
+    public ResponseEntity<TransactionsResponse> getMethodName(@PathVariable String bank_id, @PathVariable String account_id, @RequestParam(required = false) String from_booking_date_time,
+                                @RequestParam(required = false) String to_booking_date_time, @RequestParam(defaultValue = "1") String page, 
+                                @RequestParam(defaultValue = "50") String limit) {
+        
+        Map<String, String> queryMap = Map.of("page", page, "limit", limit);
+        if (from_booking_date_time != null) queryMap.put("from_booking_date_time", from_booking_date_time);
+        if (to_booking_date_time != null) queryMap.put("to_booking_date_time", to_booking_date_time);
+                                
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(dataService.getTransactions(bank_id, account_id, queryMap));
     }
     
     

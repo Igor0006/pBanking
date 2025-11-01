@@ -1,45 +1,46 @@
 package com.example.pbanking.dto;
 
-import lombok.Data;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import java.time.LocalDate;
 import java.util.List;
 
-@Data
-public class AccountsResponse {
-    private AccountsData data;
-    private AccountsLinks links;
-    private AccountsMeta meta;
-
-    @Data
-    public static class AccountsData {
-        private List<Account> account;
+public record AccountsResponse(
+        Data data,
+        Links links,
+        Meta meta) 
+{
+    public List<Account> accounts() {
+        return data == null || data.account() == null ? List.of() : data.account();
     }
 
-    @Data
-    public static class Account {
-        private String accountId;
-        private String status;
-        private String currency;
-        private String accountType;
-        private String accountSubType;
-        private String nickname;
-        private String openingDate;
-        private List<AccountIdentification> account;
+    public record Data(
+            List<Account> account) {
     }
 
-    @Data
-    public static class AccountIdentification {
-        private String schemeName;
-        private String identification;
-        private String name;
+    public record Links(
+            String self) {
     }
 
-    @Data
-    public static class AccountsLinks {
-        private String self;
+    public record Meta(
+            Integer totalPages) {
     }
 
-    @Data
-    public static class AccountsMeta {
-        private int totalPages;
+    public record Account(
+            String accountId,
+            String status, // can be replased for enum
+            String currency,
+            String accountType, // Business / Personal / ...
+            String accountSubType, // Savings / Checking / ...
+            String nickname,
+            LocalDate openingDate,
+            @JsonProperty("account") List<AccountReference> accountReferences) {
+    }
+
+    public record AccountReference(
+            String schemeName,
+            String identification,
+            String name) {
     }
 }
