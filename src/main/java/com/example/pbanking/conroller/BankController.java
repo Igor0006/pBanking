@@ -3,18 +3,15 @@ package com.example.pbanking.conroller;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.pbanking.config.BanksProperties;
-import com.example.pbanking.dto.AccountsResponse;
 import com.example.pbanking.dto.AccountsResponse.Account;
 import com.example.pbanking.dto.BankEntry;
 import com.example.pbanking.dto.TransactionsResponse;
 import com.example.pbanking.service.BankTokenService;
 import com.example.pbanking.service.ConsentService;
 import com.example.pbanking.service.DataRecieveService;
-import com.example.pbanking.service.WebClientExecutor;
 
 import lombok.RequiredArgsConstructor;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -44,7 +41,7 @@ public class BankController {
     
     @GetMapping("/api/accounts/{bank_id}")
     public ResponseEntity<List<Account>> getUserBankAccounts(@PathVariable String bank_id) {
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(dataService.getAccounts(bank_id));
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(dataService.getAccounts(bank_id, "team062-1"));
     }
     
     @GetMapping("/api/transactions/{bank_id}/{account_id}")

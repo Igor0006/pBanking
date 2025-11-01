@@ -39,7 +39,7 @@ public class ConsentService {
 
         AccountConsentResponse response = wc.post(bank_id, ACCOUNT_PATH, requestBody, null, headers, bank_token, AccountConsentResponse.class);
         System.out.println(response);
-        saveConsents(response, bank_id, ConsentType.READ);
+        saveConsents(response, bank_id, client_id, ConsentType.READ);
     }
 
     /**
@@ -51,10 +51,15 @@ public class ConsentService {
         Credentials consent = credentialsRepository
             .findByUserAndBankAndType(user, bankService.getBankFromId(bankId), consentType)
             .orElseThrow(() -> new EntityNotFoundException("No such consent for bank: " + bankId));
-        return encryptionService.decrypt(consent.getConsent());
+        try {
+            return encryptionService.decrypt(consent.getConsent());
+        } catch (IllegalStateException ex) {
+            credentialsRepository.delete(consent);
+            throw new EntityNotFoundException("Stored consent is invalid or expired for bank: " + bankId + ". Please request a new consent.");
+        }
     }
 
-    private void saveConsents(AccountConsentResponse response, String bankId, ConsentType consentType) {
+    private void saveConsents(AccountConsentResponse response, String bankId, String clientId, ConsentType consentType) {
         User user = userService.getCurrentUser();
         Credentials consent = new Credentials();
         consent.setBank(bankService.getBankFromId(bankId));
@@ -63,6 +68,7 @@ public class ConsentService {
         consent.setType(consentType);
         consent.setExpirationDate(Instant.now().plus(Duration.ofDays(90)));
         consent.setUser(user);
+        consent.setClientId(clientId);
         credentialsRepository.save(consent);
     }
 }

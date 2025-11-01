@@ -8,20 +8,32 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class EncryptionService {
-    private final TextEncryptor textEncryptor;
+
+    private final String secretKey;
 
     public EncryptionService(@Value("${encryption.secret-key}") String secretKey) {
-        String salt = KeyGenerators.string().generateKey();
-        this.textEncryptor = Encryptors.delux(secretKey, salt);
+        this.secretKey = secretKey;
     }
 
     public String encrypt(String data) {
-        if (data == null) return null;
-        return textEncryptor.encrypt(data);
+        if (data == null)
+            return null;
+        String salt = KeyGenerators.string().generateKey();
+        TextEncryptor enc = Encryptors.delux(secretKey, salt); // AES-GCM + PBKDF2
+        String cipherHex = enc.encrypt(data);
+        return salt + ":" + cipherHex;
     }
 
-    public String decrypt(String encryptedData) {
-        if (encryptedData == null) return null;
-        return textEncryptor.decrypt(encryptedData);
+    public String decrypt(String stored) {
+        if (stored == null)
+            return null;
+        int idx = stored.indexOf(':');
+        if (idx <= 0) {
+            throw new IllegalArgumentException("Encrypted value has no salt prefix (expected 'salt:cipherHex').");
+        }
+        String salt = stored.substring(0, idx);
+        String cipherHex = stored.substring(idx + 1);
+        TextEncryptor enc = Encryptors.delux(secretKey, salt);
+        return enc.decrypt(cipherHex);
     }
 }
