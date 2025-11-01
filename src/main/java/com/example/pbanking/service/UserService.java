@@ -20,7 +20,10 @@ public class UserService {
 
     // TODO: В будущем получение юзера через SecurityContextHolder
     public User getCurrentUser() {
-        return userRepository.findAll().get(0);
+        return userRepository.findAll()
+                .stream()
+                .findFirst()
+                .orElseThrow(() -> new EntityNotFoundException("No users found in the system"));
     }
 
     public void createUser(CreateUserRequest request) {

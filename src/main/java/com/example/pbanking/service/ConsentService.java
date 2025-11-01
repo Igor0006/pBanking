@@ -3,11 +3,11 @@ package com.example.pbanking.service;
 import java.time.LocalDateTime;
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 
-import com.example.pbanking.config.BanksProperties;
+import com.example.pbanking.config.TPPConfig;
 import com.example.pbanking.model.Consent;
 import com.example.pbanking.model.User;
 import com.example.pbanking.model.enums.Bank;
@@ -26,34 +26,28 @@ public class ConsentService {
     private final UserService userService;
     private final EncryptionService encryptionService;
     private final ConsentRepository consentRepository;
+    private final TPPConfig props;
     
-    @Value("${bank.id}")
-    private String requesting_bank;
-
-    @Value("${bank.name}")
-    private String requesting_bank_name;
+    private final static String ACCOUNT_PATH = "/account-consents/request";
 
     public void getReadConsent(String bank_id, String client_id, String bank_token) {
         AccountConsentRequestBody requestBody = new AccountConsentRequestBody();
         requestBody.setClient_id(client_id);
-        requestBody.setRequesting_bank(requesting_bank);
-        requestBody.setRequesting_bank_name(requesting_bank_name);
+        requestBody.setRequesting_bank(props.getRequestinBankId());
+        requestBody.setRequesting_bank_name(props.getRequestinBankName());
     
-        Map<String, String> headers = Map.of(
-            "X-Requesting-Bank", requesting_bank,
-            "Content-Type", MediaType.APPLICATION_JSON_VALUE
-        );
-        // var
-        String path = "/account-consents/request";
-        AccountConsentResponse response = wc.post(bank_id, path, requestBody, null, headers, bank_token, AccountConsentResponse.class);
+        Map<String, String> headers = java.util.Collections.singletonMap("X-Requesting-Bank", props.getRequestinBankId());
+
+        AccountConsentResponse response = wc.post(bank_id, ACCOUNT_PATH, requestBody, null, headers, bank_token, AccountConsentResponse.class);
+        System.out.println(response);
         saveConsents(response, bank_id, ConsentType.READ);
     }
 
     public String getConsentForBank(String bankId, ConsentType consentType) {
         User user = userService.getCurrentUser();
         Consent consent = consentRepository
-        .findByUserAndBankAndType(user, Bank.getBankFromCode(bankId), consentType)
-        .orElseThrow(() -> new EntityNotFoundException("No such consent for bank: " + bankId));
+            .findByUserAndBankAndType(user, Bank.getBankFromCode(bankId), consentType)
+            .orElseThrow(() -> new EntityNotFoundException("No such consent for bank: " + bankId));
         return encryptionService.decrypt(consent.getConsent());
     }
 
