@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class BankTokenService {
     private final WebClientExecutor wc;
+    private final BankService bankService;
     private static final Duration SKEW = Duration.ofSeconds(90);
     
     private ConcurrentHashMap<String, Token> tokens = new ConcurrentHashMap<>();
@@ -41,7 +42,9 @@ public class BankTokenService {
                 "client_secret", team_secret
         );
         var response = wc.post(bank_id, path, null, form, null, null, TokenResponse.class);
-        return new Token(response.accessToken, Instant.now().plus(Duration.ofSeconds(response.expiresIn)));
+        Token token = new Token(response.accessToken, Instant.now().plus(Duration.ofSeconds(response.expiresIn)));
+        bankService.saveToken(bank_id, token.value(), token.expiresAt());
+        return token;
     }
     
     private boolean isValid(Token t) {

@@ -2,12 +2,10 @@ package com.example.pbanking.dto;
 
 import java.util.UUID;
 
-import com.example.pbanking.model.enums.Bank;
-
 // Test request
 public record AddConsentRequest(
     String consent,
-    Bank bank,
+    String bank,
     UUID userId
 ) {
     

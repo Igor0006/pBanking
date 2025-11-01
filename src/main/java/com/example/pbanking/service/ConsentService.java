@@ -1,16 +1,17 @@
 package com.example.pbanking.service;
 
-import java.time.LocalDateTime;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
+import com.example.pbanking.model.Credentials;
 import com.example.pbanking.config.TPPConfig;
 import com.example.pbanking.model.Consent;
 import com.example.pbanking.model.User;
-import com.example.pbanking.model.enums.Bank;
 import com.example.pbanking.model.enums.ConsentType;
-import com.example.pbanking.repository.ConsentRepository;
+import com.example.pbanking.repository.CredentialsRepository;
 import com.example.pbanking.dto.AccountConsentRequestBody;
 import com.example.pbanking.dto.AccountConsentResponse;
 
@@ -23,6 +24,8 @@ public class ConsentService {
     private final WebClientExecutor wc;
     private final UserService userService;
     private final EncryptionService encryptionService;
+    private final BankService bankService;
+    private final CredentialsRepository credentialsRepository;
     private final ConsentRepository consentRepository;
     private final TPPConfig props;
     
@@ -41,6 +44,10 @@ public class ConsentService {
         saveConsents(response, bank_id, ConsentType.READ);
     }
 
+    /**
+     * Finds the consent for the current user and requested bank
+     * @return String consent
+     */
     public String getConsentForBank(String bankId, ConsentType consentType) {
         User user = userService.getCurrentUser();
         Consent consent = consentRepository
@@ -51,13 +58,13 @@ public class ConsentService {
 
     private void saveConsents(AccountConsentResponse response, String bankId, ConsentType consentType) {
         User user = userService.getCurrentUser();
-        Consent consent = new Consent();
-        consent.setBank(Bank.getBankFromCode(bankId));
+        Credentials consent = new Credentials();
+        consent.setBank(bankService.getBankFromId(bankId));
         consent.setConsent(encryptionService.encrypt(response.consent_id()));
         consent.setStatus(response.status());
         consent.setType(consentType);
-        consent.setExpirationDate(LocalDateTime.now().plusDays(90));
+        consent.setExpirationDate(Instant.now().plus(Duration.ofDays(90)));
         consent.setUser(user);
-        consentRepository.save(consent);
+        credentialsRepository.save(consent);
     }
 }
