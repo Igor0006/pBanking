@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service;
 
 import com.example.pbanking.model.Credentials;
 import com.example.pbanking.config.TPPConfig;
-import com.example.pbanking.model.Consent;
 import com.example.pbanking.model.User;
 import com.example.pbanking.model.enums.ConsentType;
 import com.example.pbanking.repository.CredentialsRepository;
@@ -26,7 +25,6 @@ public class ConsentService {
     private final EncryptionService encryptionService;
     private final BankService bankService;
     private final CredentialsRepository credentialsRepository;
-    private final ConsentRepository consentRepository;
     private final TPPConfig props;
     
     private final static String ACCOUNT_PATH = "/account-consents/request";
@@ -50,8 +48,8 @@ public class ConsentService {
      */
     public String getConsentForBank(String bankId, ConsentType consentType) {
         User user = userService.getCurrentUser();
-        Consent consent = consentRepository
-            .findByUserAndBankAndType(user, Bank.getBankFromCode(bankId), consentType)
+        Credentials consent = credentialsRepository
+            .findByUserAndBankAndType(user, bankService.getBankFromId(bankId), consentType)
             .orElseThrow(() -> new EntityNotFoundException("No such consent for bank: " + bankId));
         return encryptionService.decrypt(consent.getConsent());
     }

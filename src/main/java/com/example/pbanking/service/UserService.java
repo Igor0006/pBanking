@@ -6,6 +6,7 @@ import com.example.pbanking.dto.CreateUserRequest;
 import com.example.pbanking.model.User;
 import com.example.pbanking.repository.UserRepository;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 
 @Service
