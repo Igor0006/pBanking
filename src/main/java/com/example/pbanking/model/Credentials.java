@@ -1,6 +1,6 @@
 package com.example.pbanking.model;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 import com.example.pbanking.model.enums.ConsentType;
 
@@ -16,8 +16,8 @@ import lombok.Data;
 
 @Data
 @Entity
-@Table(name = "consents")
-public class Consent {
+@Table(name = "credentials")
+public class Credentials {
     @Id
     @Column(columnDefinition = "TEXT")
     private String consent;
@@ -34,5 +34,7 @@ public class Consent {
     private ConsentType type;
 
     private String status;
-    private LocalDateTime expirationDate;
+    private Instant expirationDate;
+
+    private String clientId;
 }

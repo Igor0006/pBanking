@@ -35,8 +35,6 @@ public class User {
     @Nonnull
     private String password;
 
-    private String clientId;
-
     @OneToMany(mappedBy = "user")
-    private List<Consent> consents;
+    private List<Credentials> consents;
 }

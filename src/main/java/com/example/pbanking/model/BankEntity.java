@@ -25,7 +25,7 @@ public class BankEntity {
     private Instant expiresAt;
 
     @OneToMany(mappedBy = "bank")
-    private List<Consent> consents;
+    private List<Credentials> consents;
 
     public BankEntity(String bankId, String bankName) {
         this.bankId = bankId;
