@@ -2,7 +2,6 @@ package com.example.pbanking.model;
 
 import java.time.LocalDateTime;
 
-import com.example.pbanking.model.enums.Bank;
 import com.example.pbanking.model.enums.ConsentType;
 
 import jakarta.persistence.Column;
@@ -23,8 +22,9 @@ public class Consent {
     @Column(columnDefinition = "TEXT")
     private String consent;
 
-    @Enumerated(EnumType.STRING)
-    private Bank bank;
+    @ManyToOne
+    @JoinColumn(name = "bank_id")
+    private BankEntity bank;
 
     @ManyToOne
     @JoinColumn(name = "user_id")

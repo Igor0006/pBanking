@@ -7,10 +7,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 
-import com.example.pbanking.config.BanksProperties;
 import com.example.pbanking.model.Consent;
 import com.example.pbanking.model.User;
-import com.example.pbanking.model.enums.Bank;
 import com.example.pbanking.model.enums.ConsentType;
 import com.example.pbanking.repository.ConsentRepository;
 import com.example.pbanking.dto.AccountConsentRequestBody;
@@ -25,6 +23,7 @@ public class ConsentService {
     private final WebClientExecutor wc;
     private final UserService userService;
     private final EncryptionService encryptionService;
+    private final BankService bankService;
     private final ConsentRepository consentRepository;
     
     @Value("${bank.id}")
@@ -52,7 +51,7 @@ public class ConsentService {
     public String getConsentForBank(String bankId, ConsentType consentType) {
         User user = userService.getCurrentUser();
         Consent consent = consentRepository
-        .findByUserAndBankAndType(user, Bank.getBankFromCode(bankId), consentType)
+        .findByUserAndBankAndType(user, bankService.getBankFromId(bankId), consentType)
         .orElseThrow(() -> new EntityNotFoundException("No such consent for bank: " + bankId));
         return encryptionService.decrypt(consent.getConsent());
     }
@@ -60,7 +59,7 @@ public class ConsentService {
     private void saveConsents(AccountConsentResponse response, String bankId, ConsentType consentType) {
         User user = userService.getCurrentUser();
         Consent consent = new Consent();
-        consent.setBank(Bank.getBankFromCode(bankId));
+        consent.setBank(bankService.getBankFromId(bankId));
         consent.setConsent(encryptionService.encrypt(response.consent_id()));
         consent.setStatus(response.status());
         consent.setType(consentType);
