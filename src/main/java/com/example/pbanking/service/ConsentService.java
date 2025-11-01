@@ -48,6 +48,10 @@ public class ConsentService {
         saveConsents(response, bank_id, ConsentType.READ);
     }
 
+    /**
+     * Finds the consent for the current user and requested bank
+     * @return String consent
+     */
     public String getConsentForBank(String bankId, ConsentType consentType) {
         User user = userService.getCurrentUser();
         Consent consent = consentRepository

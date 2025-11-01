@@ -1,7 +1,9 @@
 package com.example.pbanking.model;
 
+import java.time.Instant;
 import java.util.List;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
@@ -17,7 +19,10 @@ public class BankEntity {
     @Id
     private String bankId;
     private String name;
+
+    @Column(columnDefinition = "TEXT")
     private String token;
+    private Instant expiresAt;
 
     @OneToMany(mappedBy = "bank")
     private List<Consent> consents;
@@ -27,11 +32,11 @@ public class BankEntity {
         this.name = bankName;
     }
 
-    // public void setBankId(String bankId) {
-    //     this.bankId = bankId;
-    // }
+    public void setToken(String token) {
+        this.token = token;
+    }
 
-    // public void setName(String bankName) {
-    //     this.name = bankName;
-    // }
+    public void setExpiresAt(Instant expiresAt) {
+        this.expiresAt = expiresAt;
+    }
 }
