@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.pbanking.dto.AuthResponse;
 import com.example.pbanking.dto.AuthUserRequest;
 import com.example.pbanking.dto.CreateUserRequest;
+import com.example.pbanking.repository.CredentialsRepository.BankClientPair;
 import com.example.pbanking.service.UserService;
 
 import lombok.AllArgsConstructor;
@@ -43,7 +44,7 @@ public class UserController {
     }
     
     @GetMapping("api/clientIds")
-    public ResponseEntity<List<String>> getUsersClientIds() {
+    public ResponseEntity<List<BankClientPair>> getUsersClientIds() {
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(userService.getUserClientIds());
     }
     

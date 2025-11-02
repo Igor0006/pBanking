@@ -1,5 +1,7 @@
 package com.example.pbanking.service;
 
+import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -12,6 +14,7 @@ import com.example.pbanking.dto.TransactionsResponse;
 import com.example.pbanking.dto.AccountsResponse.Account;
 import com.example.pbanking.dto.AvailableProductsResponse.Product;
 import com.example.pbanking.model.enums.ConsentType;
+import com.example.pbanking.repository.CredentialsRepository.BankClientPair;
 
 import lombok.RequiredArgsConstructor;
 
@@ -21,12 +24,12 @@ public class DataRecieveService {
     private final WebClientExecutor wc;
     private final BankTokenService tokenService;
     private final ConsentService consentService;
+    private final UserService userService;
     private final TPPConfig props;
     private final static String ACCOUNTS_PATH = "/accounts";
     private final static String TRANSACTIONS_PATH = "/transactions";
     private final static String AVAILABLE_PRODUCTS_PATH = "/products";
     
-    // take client_id in futire form security context 
     public List<Account> getAccounts(String bank_id, String client_id) {
         var headersMap = Map.of("x-requesting-bank", props.getRequestingBankId(), "x-consent-id",  consentService.getConsentForBank(bank_id, ConsentType.READ));
         var queryMap = Map.of("client_id", client_id);
@@ -41,7 +44,28 @@ public class DataRecieveService {
                 TransactionsResponse.class);
     }
     
-    
+    public BigDecimal countGeneralExpens(String from_time, String to_time) {
+        Map<String, String> queryMap = Map.of("from_booking_date_time", from_time, "to_booking_date_time", to_time);
+        BigDecimal counter = new BigDecimal(0);
+        List<BankClientPair> list = userService.getUserClientIds();
+        for (var pair: list) {
+            for(var account: getAccounts(pair.getBankId(), pair.getClientId())) {
+                for(var transaction: getTransactions(pair.getBankId(), account.accountId(), queryMap).data().transaction()) {
+                    counter = counter.add(transaction.amount().amount());
+                }
+            }
+        }
+        return counter;
+    }
+     
+    public BigDecimal countAccountExpens(String bank_id, String account_id, String from_time, String to_time) {
+        Map<String, String> queryMap = Map.of("from_booking_date_time", from_time, "to_booking_date_time", to_time);
+        BigDecimal counter = new BigDecimal(0);
+        for (var transaction : getTransactions(bank_id, account_id, queryMap).data().transaction()) {
+            counter = counter.add(transaction.amount().amount());
+        }
+        return counter;
+    } 
     
     public List<Product> getAvailableProducts(String bank_id) {
         return wc.get(bank_id, AVAILABLE_PRODUCTS_PATH, null, null, tokenService.getBankToken(bank_id), AvailableProductsResponse.class).products();

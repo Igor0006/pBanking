@@ -11,6 +11,7 @@ import com.example.pbanking.dto.AuthUserRequest;
 import com.example.pbanking.dto.CreateUserRequest;
 import com.example.pbanking.model.User;
 import com.example.pbanking.repository.CredentialsRepository;
+import com.example.pbanking.repository.CredentialsRepository.BankClientPair;
 import com.example.pbanking.repository.UserRepository;
 
 import jakarta.persistence.EntityExistsException;
@@ -59,7 +60,7 @@ public class UserService {
         return new AuthResponse(token, jwtService.getExpirationTime());
     }
     
-    public List<String> getUserClientIds() {
-        return credentialsRepository.findClientIdsByUser(getCurrentUser());
+    public List<BankClientPair> getUserClientIds() {
+        return credentialsRepository.findBankClientPairsByUser(getCurrentUser());
     }
 }

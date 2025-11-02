@@ -46,7 +46,6 @@ public class BankController {
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(dataService.getAvailableProducts(bank_id));
     }
     
-    
     @GetMapping("/api/accounts/{bank_id}/{client_id}")
     public ResponseEntity<List<Account>> getUserBankAccounts(@PathVariable String bank_id, @PathVariable String client_id) {
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(dataService.getAccounts(bank_id, client_id));
@@ -62,10 +61,9 @@ public class BankController {
         if (to_booking_date_time != null) queryMap.put("to_booking_date_time", to_booking_date_time);
                                 
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(dataService.getTransactions(bank_id, account_id, queryMap));
-    }
+    }   
     
-    
-    @PostMapping("/account-consent")
+    @PostMapping("api/account-consent")
     public ResponseEntity<AccountConsentResponse> getConsent(@RequestBody AccountConsentApiRequest request) {
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(consentService.getReadConsent(request.bank_id, request.client_id));
     }
