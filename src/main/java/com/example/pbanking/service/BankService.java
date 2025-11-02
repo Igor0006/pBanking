@@ -11,6 +11,7 @@ import com.example.pbanking.dto.BankEntry;
 import com.example.pbanking.model.BankEntity;
 import com.example.pbanking.repository.BankRepository;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -20,12 +21,6 @@ public class BankService {
     private final BanksProperties banksProperties;
     private final EncryptionService encryptionService;
 
-    /**
-     * Gets a bank entity by bankId. If it is not present in the database, but
-     * is present in the banks.yml file, a new entry is created beforehand.
-     * 
-     * @return BankEntity
-     */
     public BankEntity getBankFromId(String bankId) {
         Optional<BankEntity> optionalBank = bankRepository.findById(bankId);
         if (!optionalBank.isPresent()) {
@@ -51,7 +46,8 @@ public class BankService {
 
         throw new IllegalArgumentException("No such bank: " + bankId);
     }
-
+    
+    @Transactional
     public void saveToken(String bankId, String token, Instant expiresAt) {
         if (token == null) {
             throw new IllegalArgumentException("Recieved token for bank " + bankId + " is null");
@@ -59,6 +55,7 @@ public class BankService {
         BankEntity bank = getBankFromId(bankId);
         bank.setToken(encryptionService.encrypt(token));
         bank.setExpiresAt(expiresAt);
+        bankRepository.save(bank);
     }
 
     public Optional<StoredToken> getStoredToken(String bankId) {

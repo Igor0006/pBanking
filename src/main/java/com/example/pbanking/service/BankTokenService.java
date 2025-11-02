@@ -7,8 +7,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClientRequestException;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import com.example.pbanking.service.BankService.StoredToken;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -24,8 +22,8 @@ public class BankTokenService {
     
     private ConcurrentHashMap<String, Token> tokens = new ConcurrentHashMap<>();
 
-    @Value("${bank.token_path}")
-    private String path;
+    private final static String path = "/auth/bank-token";
+    
     @Value("${secret.team_code}")
     private String team_code;
     @Value("${secret.team_secret}")
@@ -33,7 +31,13 @@ public class BankTokenService {
     
     public String getBankToken(String bank_id) {
         tokens.compute(bank_id, (k, existing) -> {
-            if (isValid(existing)) return existing;
+            if (isValid(existing)) {
+                return existing;
+            }
+            Token stored = loadFromStorage(k);
+            if (isValid(stored)) {
+                return stored;
+            }
             return fetchToken(k);
         });
         return tokens.get(bank_id).value;
@@ -44,31 +48,27 @@ public class BankTokenService {
                 "client_id", team_code,
                 "client_secret", team_secret
         );
-        try {
-            var response = wc.post(bank_id, path, null, form, null, null, TokenResponse.class);
-            Token token = new Token(response.accessToken, Instant.now().plus(Duration.ofSeconds(response.expiresIn)));
-            bankService.saveToken(bank_id, token.value(), token.expiresAt());
-            return token;
-        } catch (WebClientResponseException | WebClientRequestException ex) {
-            return tryReuseStoredToken(bank_id, ex);
-        }
+        var response = wc.post(bank_id, path, null, form, null, null, TokenResponse.class);
+        Token token = new Token(response.accessToken, Instant.now().plus(Duration.ofSeconds(response.expiresIn)));
+        bankService.saveToken(bank_id, token.value(), token.expiresAt());
+        return token;
     }
 
     private boolean isValid(Token t) {
         return t != null && Instant.now().plus(SKEW).isBefore(t.expiresAt());
     }
 
-    private Token tryReuseStoredToken(String bankId, RuntimeException originalException) {
-        StoredToken storedToken = bankService.getStoredToken(bankId)
+    private boolean isValid(StoredToken stored) {
+        return stored != null && Instant.now().plus(SKEW).isBefore(stored.expiresAt());
+    }
+    
+    private Token loadFromStorage(String bankId) {
+        return bankService.getStoredToken(bankId)
                 .filter(this::isValid)
-                .orElseThrow(() -> originalException);
-
-        return new Token(storedToken.value(), storedToken.expiresAt());
+                .map(stored -> new Token(stored.value(), stored.expiresAt()))
+                .orElse(null);
     }
-
-    private boolean isValid(StoredToken token) {
-        return token != null && Instant.now().plus(SKEW).isBefore(token.expiresAt());
-    }
+    
     
     private record Token(String value, Instant expiresAt) {}
     private record TokenResponse(
