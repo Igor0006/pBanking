@@ -4,24 +4,28 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 @Component
-@ConfigurationProperties(prefix = "secret")
+@ConfigurationProperties(prefix = "bank")
 public class TPPConfig {
-    private String teamCode;
-    private String teamSecret;
+    private String id;
+    private String name;
 
-    public String getRequestinBankId() {
-        return teamCode;
+    public String getId() {
+        return id;
     }
-    
-    public String getRequestinBankName() {
-        return teamSecret;
+    public void setId(String id) {
+        this.id = id;
+    }
+    public String getName() {
+        return name;
+    }
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public void setTeamCode(String teamCode) {
-        this.teamCode = teamCode;
+    public String getRequestingBankId() {
+        return id;
     }
-
-    public void setTeamSecret(String teamSecret) {
-        this.teamSecret = teamSecret;
+    public String getRequestingBankName() {
+        return name;
     }
 }

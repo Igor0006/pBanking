@@ -16,7 +16,6 @@ import lombok.RequiredArgsConstructor;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.catalina.connector.Response;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -65,12 +64,11 @@ public class BankController {
     }
     
     
-    
     // не забыть нормально эндпоинт сделать
     @GetMapping("/account-consent")
     public void stabName() {
-        String token = tokenService.getBankToken("abank");
-        consentService.getReadConsent("abank", "team062-1", token);
+        String token = tokenService.getBankToken("sbank");
+        consentService.getReadConsent("sbank", "team062-1", token);
     }
 }
     

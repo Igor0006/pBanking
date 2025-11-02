@@ -11,4 +11,6 @@ import com.example.pbanking.model.enums.ConsentType;
 
 public interface CredentialsRepository extends JpaRepository<Credentials, String> {
     Optional<Credentials> findByUserAndBankAndType(User user, BankEntity bank, ConsentType type);
+
+    Optional<Credentials> findByUserAndBankAndClientId(User user, BankEntity bank, String clientId);
 }

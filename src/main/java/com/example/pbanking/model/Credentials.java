@@ -2,6 +2,7 @@ package com.example.pbanking.model;
 
 import java.time.Instant;
 
+import com.example.pbanking.model.enums.ConsentStatus;
 import com.example.pbanking.model.enums.ConsentType;
 
 import jakarta.persistence.Column;
@@ -12,11 +13,15 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.Data;
 
 @Data
 @Entity
-@Table(name = "credentials")
+@Table(
+  name = "credentials",
+  uniqueConstraints = @UniqueConstraint(columnNames = {"bank_id", "user_id", "client_id"})
+)
 public class Credentials {
     @Id
     @Column(columnDefinition = "TEXT")
@@ -33,7 +38,9 @@ public class Credentials {
     @Enumerated(EnumType.STRING)
     private ConsentType type;
 
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private ConsentStatus status;
+    
     private Instant expirationDate;
 
     private String clientId;

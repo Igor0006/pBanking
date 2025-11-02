@@ -1,3 +1,7 @@
 package com.example.pbanking.dto;
 
-public record AccountConsentResponse(String status, String consent_id, Boolean auto_approved) { }
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+public record AccountConsentResponse(String status, String request_id, 
+                                    @JsonProperty(required = false) String consent_id, 
+                                    Boolean auto_approved, String created_at) { }
