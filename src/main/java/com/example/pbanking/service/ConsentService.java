@@ -57,6 +57,8 @@ public class ConsentService {
      * Finds the consent for the current user and requested bank
      * @return String consent
      */
+    
+     //add client id support
     public String getConsentForBank(String bankId, ConsentType consentType) {
         User user = userService.getCurrentUser();
         Credentials consent = credentialsRepository.findByUserAndBankAndType(user, bankService.getBankFromId(bankId), consentType)
