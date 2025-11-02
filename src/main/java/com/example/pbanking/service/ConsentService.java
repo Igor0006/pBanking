@@ -33,11 +33,12 @@ public class ConsentService {
     private final BankService bankService;
     private final CredentialsRepository credentialsRepository;
     private final TPPConfig props;
+    private final BankTokenService tokenService;
     
     private final static String ACCOUNT_PATH = "/account-consents/request";
     private final static String CHECK_CONSENT_PATH = "/account-consents";
 
-    public void getReadConsent(String bank_id, String client_id, String bank_token) {
+    public void getReadConsent(String bank_id, String client_id) {
         AccountConsentRequestBody requestBody = new AccountConsentRequestBody();
         requestBody.setClient_id(client_id);
         requestBody.setRequesting_bank(props.getRequestingBankId());
@@ -48,7 +49,7 @@ public class ConsentService {
             headers.put("X-Requesting-Bank", props.getRequestingBankId());
         }
 
-        AccountConsentResponse response = wc.post(bank_id, ACCOUNT_PATH, requestBody, null, headers, bank_token, AccountConsentResponse.class);
+        AccountConsentResponse response = wc.post(bank_id, ACCOUNT_PATH, requestBody, null, headers, tokenService.getBankToken(bank_id), AccountConsentResponse.class);
         System.out.println(response);
         saveConsents(response, bank_id, client_id, ConsentType.READ);
     }

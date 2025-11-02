@@ -67,8 +67,7 @@ public class BankController {
     // не забыть нормально эндпоинт сделать
     @GetMapping("/account-consent")
     public void stabName() {
-        String token = tokenService.getBankToken("sbank");
-        consentService.getReadConsent("sbank", "team062-1", token);
+        consentService.getReadConsent("sbank", "team062-1");
     }
 }
     

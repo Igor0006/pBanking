@@ -1,11 +1,5 @@
 package com.example.pbanking.service;
 
-import java.security.NoSuchAlgorithmException;
-import java.util.Base64;
-
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.encrypt.Encryptors;
@@ -13,71 +7,65 @@ import org.springframework.security.crypto.encrypt.TextEncryptor;
 import org.springframework.security.crypto.keygen.KeyGenerators;
 import org.springframework.stereotype.Service;
 
-import io.jsonwebtoken.io.Decoders;
-import io.jsonwebtoken.security.Keys;
-
+/**
+ * Provides symmetric encryption utilities for storing sensitive data
+ * and delegates password hashing to BCrypt.
+ */
 @Service
 public class EncryptionService {
-    private final TextEncryptor textEncryptor;
-    private final String authSecretKey;
-    private final BCryptPasswordEncoder encoder;
-
-    public EncryptionService(@Value("${encryption.secret-key}") String secretKey, BCryptPasswordEncoder encoder)
-            throws NoSuchAlgorithmException {
-        String salt = KeyGenerators.string().generateKey();
-        this.textEncryptor = Encryptors.delux(secretKey, salt);
-        SecretKey authSecretKey = KeyGenerator.getInstance("HmacSHA256").generateKey();
-        this.authSecretKey = Base64.getEncoder().encodeToString(authSecretKey.getEncoded());
-        this.encoder = encoder;
-
     private final String secretKey;
+    private final BCryptPasswordEncoder passwordEncoder;
 
-    public EncryptionService(@Value("${encryption.secret-key}") String secretKey) {
+    public EncryptionService(@Value("${encryption.secret-key}") String secretKey,
+                             BCryptPasswordEncoder passwordEncoder) {
+        if (secretKey == null || secretKey.isBlank()) {
+            throw new IllegalStateException("Property 'encryption.secret-key' must be provided.");
+        }
         this.secretKey = secretKey;
+        this.passwordEncoder = passwordEncoder;
     }
 
+    /**
+     * Encrypts plain text data using AES with a random salt.
+     * The salt is prepended to the cipher text using the format {@code salt:cipherHex}.
+     */
     public String encrypt(String data) {
-        if (data == null)
+        if (data == null) {
             return null;
-        return textEncryptor.encrypt(data);
-    }
-
-    public String decrypt(String encryptedData) {
-        if (encryptedData == null)
-            return null;
-        return textEncryptor.decrypt(encryptedData);
-    }
-
-    public SecretKey getAuthSecretKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(authSecretKey);
-        return Keys.hmacShaKeyFor(keyBytes);
-    }
-
-    public String encodePassword(String password) {
-        return encoder.encode(password);
-    }
-
-    public boolean isValidPassword(String password, String encodedPassword) {
-        return encoder.matches(password, encodedPassword);
-    }
-
-}
+        }
         String salt = KeyGenerators.string().generateKey();
-        TextEncryptor enc = Encryptors.delux(secretKey, salt); // AES-GCM + PBKDF2
-        String cipherHex = enc.encrypt(data);
-        return salt + ":" + cipherHex;
+        TextEncryptor encryptor = Encryptors.delux(secretKey, salt);
+        return salt + ":" + encryptor.encrypt(data);
     }
 
+    /**
+     * Decrypts text produced by {@link #encrypt(String)}.
+     */
     public String decrypt(String stored) {
-        if (stored == null)
+        if (stored == null) {
             return null;
+        }
         int idx = stored.indexOf(':');
         if (idx <= 0) {
             throw new IllegalArgumentException("Encrypted value has no salt prefix (expected 'salt:cipherHex').");
         }
         String salt = stored.substring(0, idx);
         String cipherHex = stored.substring(idx + 1);
-        TextEncryptor enc = Encryptors.delux(secretKey, salt);
-        return enc.decrypt(cipherHex);
+        TextEncryptor encryptor = Encryptors.delux(secretKey, salt);
+        return encryptor.decrypt(cipherHex);
+    }
+
+    public String encodePassword(String password) {
+        if (password == null) {
+            return null;
+        }
+        return passwordEncoder.encode(password);
+    }
+
+    public boolean isValidPassword(String password, String encodedPassword) {
+        if (password == null || encodedPassword == null) {
+            return false;
+        }
+        return passwordEncoder.matches(password, encodedPassword);
     }
 }
