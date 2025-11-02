@@ -3,6 +3,8 @@ package com.example.pbanking.model;
 import java.time.Instant;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -25,6 +27,7 @@ public class BankEntity {
     private Instant expiresAt;
 
     @OneToMany(mappedBy = "bank")
+    @JsonManagedReference
     private List<Credentials> consents;
 
     public BankEntity(String bankId, String bankName) {
