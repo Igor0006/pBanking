@@ -60,4 +60,17 @@ public class BankService {
         bank.setToken(encryptionService.encrypt(token));
         bank.setExpiresAt(expiresAt);
     }
+
+    public Optional<StoredToken> getStoredToken(String bankId) {
+        return bankRepository.findById(bankId)
+                .flatMap(bank -> {
+                    if (bank.getToken() == null || bank.getExpiresAt() == null) {
+                        return Optional.empty();
+                    }
+                    String decrypted = encryptionService.decrypt(bank.getToken());
+                    return Optional.of(new StoredToken(decrypted, bank.getExpiresAt()));
+                });
+    }
+
+    public record StoredToken(String value, Instant expiresAt) {}
 }

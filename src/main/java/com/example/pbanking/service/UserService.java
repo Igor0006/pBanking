@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service;
 
 import com.example.pbanking.dto.AuthResponse;
 import com.example.pbanking.dto.AuthUserRequest;
-import com.example.pbanking.dto.CreateUserRequest;
 import com.example.pbanking.model.User;
 import com.example.pbanking.repository.CredentialsRepository;
 import com.example.pbanking.repository.CredentialsRepository.BankClientPair;
@@ -30,11 +29,6 @@ public class UserService {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new EntityNotFoundException("No users found in the system"));
-    }
-
-    public void createUser(CreateUserRequest request) {
-        User user = new User(request.username(), encryptionService.encodePassword(request.password()));
-        userRepository.save(user);
     }
 
     public AuthResponse registerUser(AuthUserRequest request) {

@@ -1,7 +1,6 @@
 package com.example.pbanking.service;
 
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -15,6 +14,7 @@ import com.example.pbanking.dto.AccountsResponse.Account;
 import com.example.pbanking.dto.AvailableProductsResponse.Product;
 import com.example.pbanking.model.enums.ConsentType;
 import com.example.pbanking.repository.CredentialsRepository.BankClientPair;
+import com.example.pbanking.dto.TransactionsResponse.TransactionStatus;
 
 import lombok.RequiredArgsConstructor;
 
@@ -51,7 +51,9 @@ public class DataRecieveService {
         for (var pair: list) {
             for(var account: getAccounts(pair.getBankId(), pair.getClientId())) {
                 for(var transaction: getTransactions(pair.getBankId(), account.accountId(), queryMap).data().transaction()) {
-                    counter = counter.add(transaction.amount().amount());
+                    if (transaction.status() == TransactionStatus.BOOKED 
+                            && transaction.bankTransactionCode().code().contains("Issued"))
+                        counter = counter.add(transaction.amount().amount());
                 }
             }
         }
@@ -62,8 +64,9 @@ public class DataRecieveService {
         Map<String, String> queryMap = Map.of("from_booking_date_time", from_time, "to_booking_date_time", to_time);
         BigDecimal counter = new BigDecimal(0);
         for (var transaction : getTransactions(bank_id, account_id, queryMap).data().transaction()) {
-            counter = counter.add(transaction.amount().amount());
-        }
+            if (transaction.status() == TransactionStatus.BOOKED
+                    && transaction.bankTransactionCode().code().contains("Issued"))
+                counter = counter.add(transaction.amount().amount());        }
         return counter;
     } 
     

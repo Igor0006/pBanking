@@ -7,7 +7,10 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClientRequestException;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
+import com.example.pbanking.service.BankService.StoredToken;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.RequiredArgsConstructor;
@@ -41,14 +44,30 @@ public class BankTokenService {
                 "client_id", team_code,
                 "client_secret", team_secret
         );
-        var response = wc.post(bank_id, path, null, form, null, null, TokenResponse.class);
-        Token token = new Token(response.accessToken, Instant.now().plus(Duration.ofSeconds(response.expiresIn)));
-        bankService.saveToken(bank_id, token.value(), token.expiresAt());
-        return token;
+        try {
+            var response = wc.post(bank_id, path, null, form, null, null, TokenResponse.class);
+            Token token = new Token(response.accessToken, Instant.now().plus(Duration.ofSeconds(response.expiresIn)));
+            bankService.saveToken(bank_id, token.value(), token.expiresAt());
+            return token;
+        } catch (WebClientResponseException | WebClientRequestException ex) {
+            return tryReuseStoredToken(bank_id, ex);
+        }
     }
-    
+
     private boolean isValid(Token t) {
         return t != null && Instant.now().plus(SKEW).isBefore(t.expiresAt());
+    }
+
+    private Token tryReuseStoredToken(String bankId, RuntimeException originalException) {
+        StoredToken storedToken = bankService.getStoredToken(bankId)
+                .filter(this::isValid)
+                .orElseThrow(() -> originalException);
+
+        return new Token(storedToken.value(), storedToken.expiresAt());
+    }
+
+    private boolean isValid(StoredToken token) {
+        return token != null && Instant.now().plus(SKEW).isBefore(token.expiresAt());
     }
     
     private record Token(String value, Instant expiresAt) {}
