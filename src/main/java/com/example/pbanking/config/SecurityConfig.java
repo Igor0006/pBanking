@@ -41,7 +41,7 @@ public class SecurityConfig {
         httpSecurity.authorizeHttpRequests(request -> request
 
                 // закомментить для отключения
-                .requestMatchers("/register", "/login")
+                .requestMatchers("api/register", "api/login")
                 .permitAll()
                 .anyRequest().authenticated());
 

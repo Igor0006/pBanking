@@ -3,11 +3,11 @@ package com.example.pbanking.conroller;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.pbanking.config.BanksProperties;
+import com.example.pbanking.dto.AccountConsentResponse;
 import com.example.pbanking.dto.AccountsResponse.Account;
 import com.example.pbanking.dto.AvailableProductsResponse.Product;
 import com.example.pbanking.dto.BankEntry;
 import com.example.pbanking.dto.TransactionsResponse;
-import com.example.pbanking.service.BankTokenService;
 import com.example.pbanking.service.ConsentService;
 import com.example.pbanking.service.DataRecieveService;
 
@@ -20,6 +20,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
 
@@ -30,7 +32,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class BankController {
     private final BanksProperties banks;
     private final ConsentService consentService;
-    private final BankTokenService tokenService;
     private final DataRecieveService dataService;
     
     @GetMapping("/api/banks")
@@ -46,9 +47,9 @@ public class BankController {
     }
     
     
-    @GetMapping("/api/accounts/{bank_id}")
-    public ResponseEntity<List<Account>> getUserBankAccounts(@PathVariable String bank_id) {
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(dataService.getAccounts(bank_id, "team062-1"));
+    @GetMapping("/api/accounts/{bank_id}/{client_id}")
+    public ResponseEntity<List<Account>> getUserBankAccounts(@PathVariable String bank_id, @PathVariable String client_id) {
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(dataService.getAccounts(bank_id, client_id));
     }
     
     @GetMapping("/api/transactions/{bank_id}/{account_id}")
@@ -64,10 +65,10 @@ public class BankController {
     }
     
     
-    // не забыть нормально эндпоинт сделать
-    @GetMapping("/account-consent")
-    public void stabName() {
-        consentService.getReadConsent("sbank", "team062-1");
+    @PostMapping("/account-consent")
+    public ResponseEntity<AccountConsentResponse> getConsent(@RequestBody AccountConsentApiRequest request) {
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(consentService.getReadConsent(request.bank_id, request.client_id));
     }
+    public record AccountConsentApiRequest(String bank_id, String client_id) {}
 }
     

@@ -38,20 +38,17 @@ public class ConsentService {
     private final static String ACCOUNT_PATH = "/account-consents/request";
     private final static String CHECK_CONSENT_PATH = "/account-consents";
 
-    public void getReadConsent(String bank_id, String client_id) {
+    public AccountConsentResponse getReadConsent(String bank_id, String client_id) {
         AccountConsentRequestBody requestBody = new AccountConsentRequestBody();
         requestBody.setClient_id(client_id);
         requestBody.setRequesting_bank(props.getRequestingBankId());
         requestBody.setRequesting_bank_name(props.getRequestingBankName());
     
-        Map<String, String> headers = new java.util.HashMap<>();
-        if (props.getRequestingBankId() != null && !props.getRequestingBankId().isBlank()) {
-            headers.put("X-Requesting-Bank", props.getRequestingBankId());
-        }
+        Map<String, String> headers = Map.of("X-Requesting-Bank", props.getRequestingBankId());
 
         AccountConsentResponse response = wc.post(bank_id, ACCOUNT_PATH, requestBody, null, headers, tokenService.getBankToken(bank_id), AccountConsentResponse.class);
-        System.out.println(response);
         saveConsents(response, bank_id, client_id, ConsentType.READ);
+        return response;
     }
 
     /**

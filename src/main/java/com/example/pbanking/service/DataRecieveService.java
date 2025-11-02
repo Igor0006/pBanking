@@ -41,6 +41,8 @@ public class DataRecieveService {
                 TransactionsResponse.class);
     }
     
+    
+    
     public List<Product> getAvailableProducts(String bank_id) {
         return wc.get(bank_id, AVAILABLE_PRODUCTS_PATH, null, null, tokenService.getBankToken(bank_id), AvailableProductsResponse.class).products();
     }

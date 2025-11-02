@@ -1,5 +1,7 @@
 package com.example.pbanking.service;
 
+import java.util.List;
+
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -8,6 +10,7 @@ import com.example.pbanking.dto.AuthResponse;
 import com.example.pbanking.dto.AuthUserRequest;
 import com.example.pbanking.dto.CreateUserRequest;
 import com.example.pbanking.model.User;
+import com.example.pbanking.repository.CredentialsRepository;
 import com.example.pbanking.repository.UserRepository;
 
 import jakarta.persistence.EntityExistsException;
@@ -18,6 +21,7 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
+    private final CredentialsRepository credentialsRepository;
     private final JWTService jwtService;
     private final EncryptionService encryptionService;
 
@@ -44,7 +48,6 @@ public class UserService {
     }
 
     public AuthResponse loginUser(AuthUserRequest request) {
-
         User user = userRepository.findByUsername(request.username())
         .orElseThrow(() -> new UsernameNotFoundException("No user with name: " + request.username()));
 
@@ -54,5 +57,9 @@ public class UserService {
 
         String token = jwtService.generateToken(request.username());
         return new AuthResponse(token, jwtService.getExpirationTime());
+    }
+    
+    public List<String> getUserClientIds() {
+        return credentialsRepository.findClientIdsByUser(getCurrentUser());
     }
 }
