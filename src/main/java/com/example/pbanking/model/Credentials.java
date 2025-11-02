@@ -3,6 +3,7 @@ package com.example.pbanking.model;
 import java.time.Instant;
 
 import com.example.pbanking.model.enums.ConsentType;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -24,10 +25,12 @@ public class Credentials {
 
     @ManyToOne
     @JoinColumn(name = "bank_id")
+    @JsonBackReference
     private BankEntity bank;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
+    @JsonBackReference
     private User user;
 
     @Enumerated(EnumType.STRING)

@@ -3,18 +3,15 @@ package com.example.pbanking.conroller;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.pbanking.config.BanksProperties;
-import com.example.pbanking.dto.AccountsResponse;
 import com.example.pbanking.dto.AccountsResponse.Account;
 import com.example.pbanking.dto.BankEntry;
 import com.example.pbanking.dto.TransactionsResponse;
 import com.example.pbanking.service.BankTokenService;
 import com.example.pbanking.service.ConsentService;
 import com.example.pbanking.service.DataRecieveService;
-import com.example.pbanking.service.WebClientExecutor;
 
 import lombok.RequiredArgsConstructor;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 

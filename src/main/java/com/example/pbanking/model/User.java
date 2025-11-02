@@ -3,7 +3,10 @@ package com.example.pbanking.model;
 import java.util.List;
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import jakarta.annotation.Nonnull;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -30,11 +33,13 @@ public class User {
     private UUID id;
 
     @Nonnull
+    @Column(unique = true)
     private String username;
 
     @Nonnull
     private String password;
 
     @OneToMany(mappedBy = "user")
+    @JsonManagedReference
     private List<Credentials> consents;
 }
