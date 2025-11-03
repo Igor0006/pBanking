@@ -13,9 +13,11 @@ import com.example.pbanking.repository.BankRepository;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class BankService {
     private final BankRepository bankRepository;
     private final BanksProperties banksProperties;
@@ -64,8 +66,16 @@ public class BankService {
                     if (bank.getToken() == null || bank.getExpiresAt() == null) {
                         return Optional.empty();
                     }
-                    String decrypted = encryptionService.decrypt(bank.getToken());
-                    return Optional.of(new StoredToken(decrypted, bank.getExpiresAt()));
+                    try {
+                        String decrypted = encryptionService.decrypt(bank.getToken());
+                        return Optional.of(new StoredToken(decrypted, bank.getExpiresAt()));
+                    } catch (RuntimeException ex) {
+                        log.warn("Stored token for bank {} is invalid, clearing it and requesting a fresh one.", bankId, ex);
+                        bank.setToken(null);
+                        bank.setExpiresAt(null);
+                        bankRepository.save(bank);
+                        return Optional.empty();
+                    }
                 });
     }
 

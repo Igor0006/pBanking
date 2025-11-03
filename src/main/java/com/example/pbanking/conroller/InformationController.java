@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.pbanking.dto.AccountsResponse.Account;
+import com.example.pbanking.dto.AccountSummary;
 import com.example.pbanking.service.DataRecieveService;
 
 import lombok.RequiredArgsConstructor;
@@ -28,7 +27,7 @@ public class InformationController {
     private final DataRecieveService dataService;
     
     @GetMapping("/accounts/{bank_id}/{client_id}")
-    public ResponseEntity<List<Account>> getUserBankAccounts(@PathVariable String bank_id, @PathVariable String client_id) {
+    public ResponseEntity<List<AccountSummary>> getUserBankAccounts(@PathVariable String bank_id, @PathVariable String client_id) {
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(dataService.getAccounts(bank_id, client_id));
     }
     
