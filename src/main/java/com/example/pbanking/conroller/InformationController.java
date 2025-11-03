@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,6 +18,7 @@ import com.example.pbanking.service.DataRecieveService;
 
 import lombok.RequiredArgsConstructor;
 
+import com.example.pbanking.dto.StatisticReposnse;
 import com.example.pbanking.dto.TransactionsResponse;
 
 @RestController
@@ -43,16 +45,16 @@ public class InformationController {
     }   
     
     @GetMapping("/expens")
-    public ResponseEntity<BigDecimal> getMethodName(@RequestParam String from_booking_date_time, @RequestParam String to_booking_date_time, 
+    public ResponseEntity<BigDecimal> getExpens(@RequestParam String from_booking_date_time, @RequestParam String to_booking_date_time, 
                                 @RequestParam(required = false) String bank_id, @RequestParam(required = false) String account_id) {
         if (bank_id == null && account_id == null)
             return ResponseEntity.status(HttpStatus.ACCEPTED).body(dataService.countGeneralExpens(from_booking_date_time, to_booking_date_time));
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(dataService.countAccountExpens(bank_id, account_id, from_booking_date_time, to_booking_date_time));
     }
     
-    // @GetMapping("/statistic")
-    // public void getMethodName() {
-    //     System.out.println(dataService.getStatistic().toString());
-    // }
+    @GetMapping("/statistic")
+    public ResponseEntity<StatisticReposnse> getStats() {
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(dataService.getStatistic());
+    }
     
 }

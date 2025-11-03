@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.YearMonth;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Service;
 import com.example.pbanking.config.TPPConfig;
 import com.example.pbanking.dto.AccountsResponse;
 import com.example.pbanking.dto.AvailableProductsResponse;
+import com.example.pbanking.dto.StatisticReposnse;
 import com.example.pbanking.dto.TransactionsResponse;
 import com.example.pbanking.dto.AccountsResponse.Account;
 import com.example.pbanking.dto.AvailableProductsResponse.Product;
@@ -31,6 +33,7 @@ public class DataRecieveService {
     private final BankTokenService tokenService;
     private final ConsentService consentService;
     private final UserService userService;
+    private final PredictExpenseService predictService;
     private final TPPConfig props;
     private final static String ACCOUNTS_PATH = "/accounts";
     private final static String TRANSACTIONS_PATH = "/transactions";
@@ -50,8 +53,30 @@ public class DataRecieveService {
                 TransactionsResponse.class);
     }
     
-    public Map<String, BigDecimal> getLastYearExpenses() {
-        Map<String, BigDecimal> stats = new LinkedHashMap<>(13);
+    public StatisticReposnse getStatistic() {
+        Map<YearMonth, BigDecimal> map = getLastYearExpenses();
+        if (map.isEmpty()) {
+            throw new NullPointerException("No transactions in users accounts");
+        }
+
+        YearMonth latestMonth = map.keySet().stream()
+                .reduce((first, second) -> second)
+                .orElseThrow();
+        int monthNum = latestMonth.getMonthValue();
+
+        List<BigDecimal> features = new ArrayList<>();
+        for (var entry : map.entrySet()) {
+            features.add(entry.getValue());
+        }
+        if (!features.isEmpty()) {
+            features.remove(features.size() - 1);
+        }
+        var predict = predictService.forecast(features.reversed().stream().map(BigDecimal::doubleValue).toList(), monthNum);
+        return new StatisticReposnse(map, predict.currentAmount(), predict.nextAmount());
+    }
+    
+    public Map<YearMonth, BigDecimal> getLastYearExpenses() {
+        Map<YearMonth, BigDecimal> stats = new LinkedHashMap<>(13);
 
         LocalDateTime start = LocalDateTime.now(ZoneOffset.UTC)
                 .withDayOfMonth(1)
@@ -61,7 +86,7 @@ public class DataRecieveService {
         LocalDateTime cursor = start;
         for (int i = 0; i < 13; i++) {
             YearMonth ym = YearMonth.from(cursor);
-            stats.put(ym.toString(), BigDecimal.ZERO);
+            stats.put(ym, BigDecimal.ZERO);
             cursor = cursor.plusMonths(1);
         }
 
@@ -79,7 +104,7 @@ public class DataRecieveService {
                 return;
             }
 
-            String key = YearMonth.from(bookingDate).toString();
+            YearMonth key = YearMonth.from(bookingDate);
             if (stats.containsKey(key)) {
                 stats.merge(key, issuedAmount, BigDecimal::add);
             }
