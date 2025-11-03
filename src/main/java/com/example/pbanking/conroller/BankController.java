@@ -6,7 +6,6 @@ import com.example.pbanking.config.BanksProperties;
 
 import com.example.pbanking.dto.AvailableProductsResponse.Product;
 import com.example.pbanking.dto.BankEntry;
-import com.example.pbanking.service.ConsentService;
 import com.example.pbanking.service.DataRecieveService;
 
 import lombok.RequiredArgsConstructor;
@@ -18,7 +17,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 
 
 

@@ -1,8 +1,14 @@
 package com.example.pbanking.service;
 
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.YearMonth;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import org.springframework.stereotype.Service;
 
@@ -44,33 +50,119 @@ public class DataRecieveService {
                 TransactionsResponse.class);
     }
     
-    public BigDecimal countGeneralExpens(String from_time, String to_time) {
-        Map<String, String> queryMap = Map.of("from_booking_date_time", from_time, "to_booking_date_time", to_time);
-        BigDecimal counter = new BigDecimal(0);
-        List<BankClientPair> list = userService.getUserClientIds();
-        for (var pair: list) {
-            for(var account: getAccounts(pair.getBankId(), pair.getClientId())) {
-                for(var transaction: getTransactions(pair.getBankId(), account.accountId(), queryMap).data().transaction()) {
-                    if (transaction.status() == TransactionStatus.BOOKED 
-                            && transaction.bankTransactionCode().code().contains("Issued"))
-                        counter = counter.add(transaction.amount().amount());
-                }
-            }
+    public Map<String, BigDecimal> getLastYearExpenses() {
+        Map<String, BigDecimal> stats = new LinkedHashMap<>(13);
+
+        LocalDateTime start = LocalDateTime.now(ZoneOffset.UTC)
+                .withDayOfMonth(1)
+                .withHour(0).withMinute(0).withSecond(0).withNano(0)
+                .minusMonths(12);
+
+        LocalDateTime cursor = start;
+        for (int i = 0; i < 13; i++) {
+            YearMonth ym = YearMonth.from(cursor);
+            stats.put(ym.toString(), BigDecimal.ZERO);
+            cursor = cursor.plusMonths(1);
         }
-        return counter;
+
+        Instant from = start.toInstant(ZoneOffset.UTC);
+        Instant to = start.plusMonths(13).toInstant(ZoneOffset.UTC);
+
+        forEachTransaction(from.toString(), to.toString(), transaction -> {
+            BigDecimal issuedAmount = extractIssuedAmount(transaction);
+            if (issuedAmount == null) {
+                return;
+            }
+
+            var bookingDate = transaction.bookingDateTime();
+            if (bookingDate == null) {
+                return;
+            }
+
+            String key = YearMonth.from(bookingDate).toString();
+            if (stats.containsKey(key)) {
+                stats.merge(key, issuedAmount, BigDecimal::add);
+            }
+        });
+
+        return stats;
+    }
+    
+    public BigDecimal countGeneralExpens(String from_time, String to_time) {
+        BigDecimal[] total = {BigDecimal.ZERO};
+        forEachTransaction(from_time, to_time, transaction -> {
+            BigDecimal issuedAmount = extractIssuedAmount(transaction);
+            if (issuedAmount != null) {
+                total[0] = total[0].add(issuedAmount);
+            }
+        });
+        return total[0];
     }
      
     public BigDecimal countAccountExpens(String bank_id, String account_id, String from_time, String to_time) {
         Map<String, String> queryMap = Map.of("from_booking_date_time", from_time, "to_booking_date_time", to_time);
-        BigDecimal counter = new BigDecimal(0);
-        for (var transaction : getTransactions(bank_id, account_id, queryMap).data().transaction()) {
-            if (transaction.status() == TransactionStatus.BOOKED
-                    && transaction.bankTransactionCode().code().contains("Issued"))
-                counter = counter.add(transaction.amount().amount());        }
-        return counter;
+        BigDecimal total = BigDecimal.ZERO;
+
+        TransactionsResponse response = getTransactions(bank_id, account_id, queryMap);
+        if (response == null) {
+            return total;
+        }
+
+        for (var transaction : response.transactions()) {
+            BigDecimal issuedAmount = extractIssuedAmount(transaction);
+            if (issuedAmount != null) {
+                total = total.add(issuedAmount);
+            }
+        }
+
+        return total;
     } 
     
     public List<Product> getAvailableProducts(String bank_id) {
         return wc.get(bank_id, AVAILABLE_PRODUCTS_PATH, null, null, tokenService.getBankToken(bank_id), AvailableProductsResponse.class).products();
+    }
+
+    private void forEachTransaction(String from, String to, Consumer<TransactionsResponse.Transaction> consumer) {
+        Map<String, String> queryMap = Map.of("from_booking_date_time", from, "to_booking_date_time", to);
+        List<BankClientPair> list = userService.getUserClientIds();
+        for (var pair : list) {
+            for (var account : getAccounts(pair.getBankId(), pair.getClientId())) {
+                TransactionsResponse response = getTransactions(pair.getBankId(), account.accountId(), queryMap);
+                if (response == null) {
+                    continue;
+                }
+                for (var transaction : response.transactions()) {
+                    consumer.accept(transaction);
+                }
+            }
+        }
+    }
+
+    private BigDecimal extractIssuedAmount(TransactionsResponse.Transaction transaction) {
+        if (transaction == null || transaction.status() != TransactionStatus.BOOKED) {
+            return null;
+        }
+
+        var bankTransactionCode = transaction.bankTransactionCode();
+        if (bankTransactionCode == null) {
+            return null;
+        }
+
+        String code = bankTransactionCode.code();
+        if (code == null || !code.contains("Issued")) {
+            return null;
+        }
+
+        var amount = transaction.amount();
+        if (amount == null) {
+            return null;
+        }
+
+        BigDecimal value = amount.amount();
+        if (value == null) {
+            return null;
+        }
+
+        return value;
     }
 }

@@ -49,4 +49,10 @@ public class InformationController {
             return ResponseEntity.status(HttpStatus.ACCEPTED).body(dataService.countGeneralExpens(from_booking_date_time, to_booking_date_time));
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(dataService.countAccountExpens(bank_id, account_id, from_booking_date_time, to_booking_date_time));
     }
+    
+    // @GetMapping("/statistic")
+    // public void getMethodName() {
+    //     System.out.println(dataService.getStatistic().toString());
+    // }
+    
 }
