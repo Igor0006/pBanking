@@ -41,9 +41,10 @@ public class SecurityConfig {
         httpSecurity.authorizeHttpRequests(request -> request
 
                 // закомментить для отключения
-                .requestMatchers("api/user/register", "api/user/login")
+                .requestMatchers("api/user/register", "api/user/login", "/v3/api-docs/**", "/swagger-ui/**",
+                        "/swagger-ui.html")
                 .permitAll()
-                .anyRequest().authenticated());
+                .anyRequest().authenticated()).csrf(csrf -> csrf.ignoringRequestMatchers("/v3/api-docs/**", "/swagger-ui/**"));
 
                 // раскомментить для отключения
                 // .anyRequest().permitAll());

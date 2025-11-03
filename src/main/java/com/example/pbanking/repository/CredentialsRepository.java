@@ -32,4 +32,12 @@ public interface CredentialsRepository extends JpaRepository<Credentials, String
             order by c.bank.bankId, c.clientId
             """)
     List<BankClientPair> findBankClientPairsByUser(@Param("user") User user);
+
+    @Query("""
+            select distinct c.bank.bankId as bankId, c.clientId as clientId
+            from Credentials c
+            where c.clientId is not null
+            order by c.bank.bankId, c.clientId
+            """)
+    List<BankClientPair> findAllBankClientPairs();
 }

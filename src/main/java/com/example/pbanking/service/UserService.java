@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import com.example.pbanking.dto.AuthResponse;
 import com.example.pbanking.dto.AuthUserRequest;
+import com.example.pbanking.dto.BankClientLink;
 import com.example.pbanking.model.User;
 import com.example.pbanking.repository.CredentialsRepository;
 import com.example.pbanking.repository.CredentialsRepository.BankClientPair;
@@ -56,5 +57,11 @@ public class UserService {
     
     public List<BankClientPair> getUserClientIds() {
         return credentialsRepository.findBankClientPairsByUser(getCurrentUser());
+    }
+
+    public List<BankClientLink> getAllBankClientLinks() {
+        return credentialsRepository.findAllBankClientPairs().stream()
+                .map(pair -> new BankClientLink(pair.getBankId(), pair.getClientId()))
+                .toList();
     }
 }
