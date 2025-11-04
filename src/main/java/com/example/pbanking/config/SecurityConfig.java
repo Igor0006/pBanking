@@ -37,6 +37,7 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
+        httpSecurity.cors(Customizer.withDefaults());
         httpSecurity.csrf(customuizer -> customuizer.disable());
         httpSecurity.authorizeHttpRequests(request -> request
 
@@ -44,7 +45,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/user/register", "/api/user/login", "/v3/api-docs/**", "/swagger-ui/**",
                         "/swagger-ui.html", "/error")
                 .permitAll()
-                .anyRequest().authenticated()).csrf(csrf -> csrf.ignoringRequestMatchers("/v3/api-docs/**", "/swagger-ui/**"));
+                .anyRequest().authenticated());
 
                 // раскомментить для отключения
                 // .anyRequest().permitAll());
@@ -66,7 +67,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of("*"));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE"));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

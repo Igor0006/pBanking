@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import org.springframework.security.access.method.P;
 import org.springframework.stereotype.Service;
 
 import com.example.pbanking.config.TPPConfig;
@@ -20,8 +21,10 @@ import com.example.pbanking.dto.AvailableProductsResponse;
 import com.example.pbanking.dto.StatisticReposnse;
 import com.example.pbanking.dto.TransactionsResponse;
 import com.example.pbanking.dto.AvailableProductsResponse.Product;
+import com.example.pbanking.exception.ApiException;
 import com.example.pbanking.exception.NotFoundException;
 import com.example.pbanking.model.enums.ConsentType;
+import com.example.pbanking.repository.TransactionRepository;
 import com.example.pbanking.repository.CredentialsRepository.BankClientPair;
 import com.example.pbanking.dto.TransactionsResponse.TransactionStatus;
 
@@ -35,6 +38,7 @@ public class DataRecieveService {
     private final ConsentService consentService;
     private final UserService userService;
     private final PredictExpenseService predictService;
+    private final TransactionRepository transactionRepository;
     private final TPPConfig props;
     private final static String ACCOUNTS_PATH = "/accounts";
     private final static String TRANSACTIONS_PATH = "/transactions";
@@ -78,6 +82,15 @@ public class DataRecieveService {
                 TransactionsResponse.class);
     }
     
+    public TransactionsResponse getTransactionsPrime(String bank_id, String account_id, Map<String, String> queryMap) {
+        var response = getTransactions(bank_id, account_id, queryMap);
+        for (var transaction : response.transactions()) {
+            transactionRepository.findTypeByTransactionId(transaction.getTransactionId())
+                .ifPresent(transaction::setType);
+        }
+        return response;
+    }
+
     public StatisticReposnse getStatistic() {
         Map<YearMonth, BigDecimal> map = getLastYearExpenses();
         if (map.isEmpty()) {
@@ -124,7 +137,7 @@ public class DataRecieveService {
                 return;
             }
 
-            var bookingDate = transaction.bookingDateTime();
+            var bookingDate = transaction.getBookingDateTime();
             if (bookingDate == null) {
                 return;
             }
@@ -189,26 +202,26 @@ public class DataRecieveService {
     }
 
     private BigDecimal extractIssuedAmount(TransactionsResponse.Transaction transaction) {
-        if (transaction == null || transaction.status() != TransactionStatus.BOOKED) {
+        if (transaction == null || transaction.getStatus() != TransactionStatus.BOOKED) {
             return null;
         }
 
-        var bankTransactionCode = transaction.bankTransactionCode();
+        var bankTransactionCode = transaction.getBankTransactionCode();
         if (bankTransactionCode == null) {
             return null;
         }
 
-        String code = bankTransactionCode.code();
+        String code = bankTransactionCode.getCode();
         if (code == null || !code.contains("Issued")) {
             return null;
         }
 
-        var amount = transaction.amount();
+        var amount = transaction.getAmount();
         if (amount == null) {
             return null;
         }
 
-        BigDecimal value = amount.amount();
+        BigDecimal value = amount.getAmount();
         if (value == null) {
             return null;
         }
