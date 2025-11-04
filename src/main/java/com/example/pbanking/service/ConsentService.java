@@ -5,7 +5,6 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -17,6 +16,7 @@ import com.example.pbanking.dto.request.BasePaymentRequestBody;
 import com.example.pbanking.dto.request.SinglePaymentWithRecieverRequest;
 import com.example.pbanking.dto.request.SinglePaymentWithoutRecieverRequest;
 import com.example.pbanking.dto.response.AccountConsentResponse;
+import com.example.pbanking.dto.response.CheckAccountConsentResponse;
 import com.example.pbanking.dto.response.PaymentConsentResponse;
 import com.example.pbanking.exception.NotFoundException;
 import com.example.pbanking.model.AccountConsent;
@@ -27,8 +27,6 @@ import com.example.pbanking.model.enums.ConsentStatus;
 import com.example.pbanking.model.enums.ConsentType;
 import com.example.pbanking.repository.AccountConsentRepository;
 import com.example.pbanking.repository.SinglePaymentConsentRepository;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -221,19 +219,5 @@ public class ConsentService {
             return data.consentId();
         }
         return null;
-    }
-
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    public record CheckAccountConsentResponse(@JsonProperty("data") Data data) {
-
-        @JsonIgnoreProperties(ignoreUnknown = true)
-        public record Data(
-                @JsonProperty(required = false) String consentId,
-                String status,
-                Instant creationDateTime,
-                Instant statusUpdateDateTime,
-                List<String> permissions,
-                Instant expirationDateTime) {
-        }
     }
 }

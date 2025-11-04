@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.pbanking.config.BanksProperties;
 import com.example.pbanking.dto.BankEntry;
 import com.example.pbanking.dto.response.AvailableProductsResponse.Product;
-import com.example.pbanking.service.DataRecieveService;
+import com.example.pbanking.service.ProductService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequestMapping("api/banks")
 public class BankController {
     private final BanksProperties banks;
-    private final DataRecieveService dataService;
+    private final ProductService productService;
     
     @GetMapping
     public ResponseEntity<List<BankEntry>> getAvailableBanks() {
@@ -36,7 +36,7 @@ public class BankController {
     
     @GetMapping("/availableProducts/{bank_id}")
     public ResponseEntity<List<Product>> getAvailableProducts(@PathVariable String bank_id) {
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(dataService.getAvailableProducts(bank_id));
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(productService.getAvailableProducts(bank_id));
     }
 }
     

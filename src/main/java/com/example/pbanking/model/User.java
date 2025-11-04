@@ -3,6 +3,7 @@ package com.example.pbanking.model;
 import java.util.List;
 import java.util.UUID;
 
+import com.example.pbanking.model.enums.UserStatus;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.annotation.Nonnull;
@@ -38,6 +39,8 @@ public class User {
 
     @Nonnull
     private String password;
+    
+    private UserStatus status = UserStatus.DEFAULT;
 
     @OneToMany(mappedBy = "user")
     @JsonManagedReference

@@ -1,29 +1,22 @@
 package com.example.pbanking.dto.response;
 
+import java.math.BigDecimal;
 import java.util.List;
 
-public record BalanceResponse(
-    Data data
-) {
-    public String amount() {
-        return data.balance.get(0).amount.amount;
+public record BalanceResponse(Data data) {
+    public record Data(List<Balance> balance) {
     }
 
-    public record Data (
-         List<Account> balance
-    ) {}
+    public record Balance(
+            String accountId,
+            String type,
+            String dateTime,
+            Amount amount,
+            String creditDebitIndicator) {
+    }
 
-    public record Account (
-        String accountId,
-        String type,
-        String dateTime,
-        Amount amount,
-        String creditDebitIndicator
-
-    ) {}
-
-    public record Amount (
-        String amount,
-        String currency
-    ) {}
+    public record Amount(
+            BigDecimal amount,
+            String currency) {
+    }
 }
