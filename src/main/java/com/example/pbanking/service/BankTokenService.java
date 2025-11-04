@@ -8,6 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.example.pbanking.service.BankService.StoredToken;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.RequiredArgsConstructor;
@@ -21,8 +22,8 @@ public class BankTokenService {
     
     private ConcurrentHashMap<String, Token> tokens = new ConcurrentHashMap<>();
 
-    @Value("${bank.token_path}")
-    private String path;
+    private final static String path = "/auth/bank-token";
+    
     @Value("${secret.team_code}")
     private String team_code;
     @Value("${secret.team_secret}")
@@ -30,7 +31,13 @@ public class BankTokenService {
     
     public String getBankToken(String bank_id) {
         tokens.compute(bank_id, (k, existing) -> {
-            if (isValid(existing)) return existing;
+            if (isValid(existing)) {
+                return existing;
+            }
+            Token stored = loadFromStorage(k);
+            if (isValid(stored)) {
+                return stored;
+            }
             return fetchToken(k);
         });
         return tokens.get(bank_id).value;
@@ -46,10 +53,22 @@ public class BankTokenService {
         bankService.saveToken(bank_id, token.value(), token.expiresAt());
         return token;
     }
-    
+
     private boolean isValid(Token t) {
         return t != null && Instant.now().plus(SKEW).isBefore(t.expiresAt());
     }
+
+    private boolean isValid(StoredToken stored) {
+        return stored != null && Instant.now().plus(SKEW).isBefore(stored.expiresAt());
+    }
+    
+    private Token loadFromStorage(String bankId) {
+        return bankService.getStoredToken(bankId)
+                .filter(this::isValid)
+                .map(stored -> new Token(stored.value(), stored.expiresAt()))
+                .orElse(null);
+    }
+    
     
     private record Token(String value, Instant expiresAt) {}
     private record TokenResponse(
