@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.pbanking.dto.AccountConsentResponse;
+import com.example.pbanking.dto.response.AccountConsentResponse;
 import com.example.pbanking.service.ConsentService;
 
 import lombok.RequiredArgsConstructor;

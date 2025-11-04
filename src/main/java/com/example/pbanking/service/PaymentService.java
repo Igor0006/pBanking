@@ -6,12 +6,12 @@ import java.util.Map;
 import org.springframework.stereotype.Service;
 
 import com.example.pbanking.config.TPPConfig;
-import com.example.pbanking.dto.BalanceResponse;
 import com.example.pbanking.dto.IntrabankPayment;
-import com.example.pbanking.dto.MakePaymentResponse;
-import com.example.pbanking.dto.MakeSinglePaymentRequest;
 import com.example.pbanking.dto.PaymentStatus;
-import com.example.pbanking.dto.SinglePaymentWithRecieverRequest;
+import com.example.pbanking.dto.request.MakeSinglePaymentRequest;
+import com.example.pbanking.dto.request.SinglePaymentWithRecieverRequest;
+import com.example.pbanking.dto.response.BalanceResponse;
+import com.example.pbanking.dto.response.MakePaymentResponse;
 import com.example.pbanking.model.enums.ConsentType;
 
 import lombok.RequiredArgsConstructor;

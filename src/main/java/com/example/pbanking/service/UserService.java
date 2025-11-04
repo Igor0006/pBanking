@@ -5,9 +5,9 @@ import java.util.List;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import com.example.pbanking.dto.AuthResponse;
-import com.example.pbanking.dto.AuthUserRequest;
 import com.example.pbanking.dto.BankClientLink;
+import com.example.pbanking.dto.request.AuthUserRequest;
+import com.example.pbanking.dto.response.AuthResponse;
 import com.example.pbanking.exception.ConflictException;
 import com.example.pbanking.exception.NotFoundException;
 import com.example.pbanking.exception.UnauthorizedException;

@@ -11,23 +11,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import org.springframework.security.access.method.P;
 import org.springframework.stereotype.Service;
 
 import com.example.pbanking.config.TPPConfig;
 import com.example.pbanking.dto.AccountSummary;
-import com.example.pbanking.dto.AccountsResponse;
-import com.example.pbanking.dto.AvailableProductsResponse;
-import com.example.pbanking.dto.BalanceResponse;
-import com.example.pbanking.dto.StatisticReposnse;
-import com.example.pbanking.dto.TransactionsResponse;
-import com.example.pbanking.dto.AvailableProductsResponse.Product;
-import com.example.pbanking.exception.ApiException;
 import com.example.pbanking.exception.NotFoundException;
 import com.example.pbanking.model.enums.ConsentType;
 import com.example.pbanking.repository.TransactionRepository;
 import com.example.pbanking.repository.CredentialsRepository.BankClientPair;
-import com.example.pbanking.dto.TransactionsResponse.TransactionStatus;
+import com.example.pbanking.dto.response.AccountsResponse;
+import com.example.pbanking.dto.response.AvailableProductsResponse;
+import com.example.pbanking.dto.response.StatisticReposnse;
+import com.example.pbanking.dto.response.TransactionsResponse;
+import com.example.pbanking.dto.response.AvailableProductsResponse.Product;
+import com.example.pbanking.dto.response.TransactionsResponse.TransactionStatus;
 
 import lombok.RequiredArgsConstructor;
 
@@ -44,12 +41,13 @@ public class DataRecieveService {
     private final static String ACCOUNTS_PATH = "/accounts";
     private final static String TRANSACTIONS_PATH = "/transactions";
     private final static String AVAILABLE_PRODUCTS_PATH = "/products";
-    private static final String BALANCE_PATH = "/accounts/%s/balances";
     
-    public List<AccountSummary> getAccounts(String bank_id, String client_id) {
-        var headersMap = Map.of("x-requesting-bank", props.getRequestingBankId(), "x-consent-id",  consentService.getConsentForBank(bank_id, ConsentType.READ));
-        var queryMap = Map.of("client_id", client_id);
-        var response = wc.get(bank_id, ACCOUNTS_PATH, queryMap, headersMap, tokenService.getBankToken(bank_id), AccountsResponse.class);
+    public List<AccountSummary> getAccounts(String bankId, String clientId) {
+        var headersMap = Map.of("x-requesting-bank", props.getRequestingBankId(),
+                "x-consent-id", consentService.getConsentForBank(bankId, ConsentType.READ));
+        var queryMap = Map.of("client_id", clientId);
+        var response = wc.get(bankId, ACCOUNTS_PATH, queryMap, headersMap, tokenService.getBankToken(bankId),
+                AccountsResponse.class);
         return response.accounts().stream()
                 .map(account -> new AccountSummary(
                         account.accountId(),
@@ -59,14 +57,15 @@ public class DataRecieveService {
                         account.nickname(),
                         account.openingDate(),
                         account.accountReferences(),
-                        getAccountBalance(account.accountId(), bank_id)))
+                        getAccountBalance(bankId, account.accountId())))
                 .toList();
     }
     
-    public BigDecimal getAccountBalance(String account_id, String bank_id){
-        var headersMap = Map.of("x-requesting-bank", props.getRequestingBankId(), "x-consent-id", consentService.getConsentForBank(bank_id, ConsentType.READ));
-        String path = ACCOUNTS_PATH + "/" + account_id + "/balances";
-        var response = wc.get(bank_id, path, null, headersMap, tokenService.getBankToken(bank_id), BalanceResponse.class);
+    public BigDecimal getAccountBalance(String bankId, String accountId){
+        var headersMap = Map.of("x-requesting-bank", props.getRequestingBankId(),
+                "x-consent-id", consentService.getConsentForBank(bankId, ConsentType.READ));
+        String path = ACCOUNTS_PATH + "/" + accountId + "/balances";
+        var response = wc.get(bankId, path, null, headersMap, tokenService.getBankToken(bankId), BalanceResponse.class);
         if (response == null || response.data() == null || response.data().balance() == null || response.data().balance().isEmpty()) {
             return BigDecimal.ZERO;
         }
@@ -77,10 +76,11 @@ public class DataRecieveService {
         return balance.amount().amount();
     } 
     
-    public TransactionsResponse getTransactions(String bank_id, String account_id, Map<String, String> queryMap) {
-        var headersMap = Map.of("x-consent-id", consentService.getConsentForBank(bank_id, ConsentType.READ), "x-requesting-bank", props.getRequestingBankId());
-        String path = ACCOUNTS_PATH + "/" + account_id + TRANSACTIONS_PATH;
-        return wc.get(bank_id, path, queryMap, headersMap, tokenService.getBankToken(bank_id),
+    public TransactionsResponse getTransactions(String bankId, String accountId, Map<String, String> queryMap) {
+        var headersMap = Map.of("x-consent-id", consentService.getConsentForBank(bankId, ConsentType.READ),
+                "x-requesting-bank", props.getRequestingBankId());
+        String path = ACCOUNTS_PATH + "/" + accountId + TRANSACTIONS_PATH;
+        return wc.get(bankId, path, queryMap, headersMap, tokenService.getBankToken(bankId),
                 TransactionsResponse.class);
     }
     
@@ -187,16 +187,6 @@ public class DataRecieveService {
         return wc.get(bank_id, AVAILABLE_PRODUCTS_PATH, null, null, tokenService.getBankToken(bank_id), AvailableProductsResponse.class).products();
     }
 
-    public BigDecimal getAccountBalance(String bankId, String accountId) {
-        var headersMap = Map.of("x-consent-id",
-                consentService.getConsentForBank(bankId, ConsentType.READ), "x-requesting-bank",
-                props.getRequestingBankId());
-
-        BalanceResponse response = wc.get(bankId, String.format(BALANCE_PATH, accountId), null,
-                headersMap, tokenService.getBankToken(bankId), BalanceResponse.class);
-
-        return new BigDecimal(response.amount());
-        
     private void forEachTransaction(String from, String to, Consumer<TransactionsResponse.Transaction> consumer) {
         Map<String, String> queryMap = Map.of("from_booking_date_time", from, "to_booking_date_time", to);
         List<BankClientPair> list = userService.getUserClientIds();

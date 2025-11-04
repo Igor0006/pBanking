@@ -17,8 +17,8 @@ import com.example.pbanking.service.DataRecieveService;
 
 import lombok.RequiredArgsConstructor;
 
-import com.example.pbanking.dto.StatisticReposnse;
-import com.example.pbanking.dto.TransactionsResponse;
+import com.example.pbanking.dto.response.StatisticReposnse;
+import com.example.pbanking.dto.response.TransactionsResponse;
 
 @RestController
 @RequiredArgsConstructor

@@ -11,7 +11,7 @@ import com.example.pbanking.model.SinglePaymentConsent;
 import com.example.pbanking.model.User;
 
 @Repository
-public interface SinglePaymentConsentRepository extends JpaRepository<SinglePaymentConsent, String> {
+public interface SinglePaymentConsentRepository extends JpaRepository<SinglePaymentConsent, Long> {
     @Query("SELECT c from SinglePaymentConsent c WHERE c.user = :user AND c.creditorAccount = :creditorAccount AND c.isUsed = false")
     Optional<SinglePaymentConsent> findByUserAndCreditorAccount(@Param("user") User user,
             @Param("creditorAccount") String creditorAccount);

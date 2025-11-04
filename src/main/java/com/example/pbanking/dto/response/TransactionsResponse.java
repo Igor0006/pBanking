@@ -1,4 +1,4 @@
-package com.example.pbanking.dto;
+package com.example.pbanking.dto.response;
 
 import com.example.pbanking.model.enums.TransactionType;
 import com.fasterxml.jackson.annotation.JsonCreator;
