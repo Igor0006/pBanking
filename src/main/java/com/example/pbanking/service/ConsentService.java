@@ -10,16 +10,24 @@ import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
+import com.example.pbanking.model.AccountConsent;
 import com.example.pbanking.model.Credentials;
+import com.example.pbanking.model.SinglePaymentConsent;
 import com.example.pbanking.config.TPPConfig;
 import com.example.pbanking.model.User;
 import com.example.pbanking.model.enums.ConsentStatus;
 import com.example.pbanking.model.enums.ConsentType;
+import com.example.pbanking.repository.AccountConsentRepository;
 import com.example.pbanking.repository.CredentialsRepository;
+import com.example.pbanking.repository.SinglePaymentConsentRepository;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.example.pbanking.dto.AccountConsentRequestBody;
 import com.example.pbanking.dto.AccountConsentResponse;
+import com.example.pbanking.dto.BasePaymentRequestBody;
+import com.example.pbanking.dto.PaymentConsentResponse;
+import com.example.pbanking.dto.SinglePaymentWithRecieverRequest;
+import com.example.pbanking.dto.SinglePaymentWithoutRecieverRequest;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -32,37 +40,57 @@ public class ConsentService {
     private final EncryptionService encryptionService;
     private final BankService bankService;
     private final CredentialsRepository credentialsRepository;
+    private final AccountConsentRepository accountConsentRepository;
+    private final SinglePaymentConsentRepository singlePaymentConsentRepository;
     private final TPPConfig props;
     private final BankTokenService tokenService;
-    
+
     private final static String ACCOUNT_PATH = "/account-consents/request";
     private final static String CHECK_CONSENT_PATH = "/account-consents";
+    private final static String PAYMENT_PATH = "/payment-consents/request";
 
-    public void getReadConsent(String bank_id, String client_id) {
+    public String getReadConsent(String bank_id, String client_id) {
         AccountConsentRequestBody requestBody = new AccountConsentRequestBody();
         requestBody.setClient_id(client_id);
         requestBody.setRequesting_bank(props.getRequestingBankId());
         requestBody.setRequesting_bank_name(props.getRequestingBankName());
-    
+
         Map<String, String> headers = new java.util.HashMap<>();
         if (props.getRequestingBankId() != null && !props.getRequestingBankId().isBlank()) {
             headers.put("X-Requesting-Bank", props.getRequestingBankId());
         }
 
-        AccountConsentResponse response = wc.post(bank_id, ACCOUNT_PATH, requestBody, null, headers, tokenService.getBankToken(bank_id), AccountConsentResponse.class);
+        AccountConsentResponse response = wc.post(bank_id, ACCOUNT_PATH, requestBody, null, headers,
+                tokenService.getBankToken(bank_id), AccountConsentResponse.class);
         System.out.println(response);
         saveConsents(response, bank_id, client_id, ConsentType.READ);
+        return response.consent_id();
+    }
+
+    public String getPaymentConsent(String bank_id, BasePaymentRequestBody requestBody) {
+        Map<String, String> headers = new java.util.HashMap<>();
+        if (requestBody.getRequesting_bank() != null && !requestBody.getRequesting_bank().isBlank()) {
+            headers.put("X-Requesting-Bank", requestBody.getRequesting_bank());
+        }
+
+        PaymentConsentResponse response = wc.post(bank_id, PAYMENT_PATH, requestBody, null, headers,
+                tokenService.getBankToken(bank_id), PaymentConsentResponse.class);
+        // TODO: обработка pending статуса
+        savePaymentConsent(response, requestBody, bank_id );
+        return response.consent_id();
+
     }
 
     /**
      * Finds the consent for the current user and requested bank
+     * 
      * @return String consent
      */
-    
-     //add client id support
+
+    // add client id support
     public String getConsentForBank(String bankId, ConsentType consentType) {
         User user = userService.getCurrentUser();
-        Credentials consent = credentialsRepository.findByUserAndBankAndType(user, bankService.getBankFromId(bankId), consentType)
+        Credentials consent = accountConsentRepository.findByUserAndBank(user, bankService.getBankFromId(bankId))
                 .orElseThrow(() -> new EntityNotFoundException("No such consent for bank: " + bankId));
 
         if (consent.getStatus().equals(ConsentStatus.pending)) {
@@ -75,7 +103,7 @@ public class ConsentService {
                 approved.setConsent(encryptionService.encrypt(approvedConsent));
                 approved.setBank(consent.getBank());
                 approved.setStatus(ConsentStatus.approved);
-                approved.setType(consentType);
+                // approved.setType(consentType);
                 approved.setExpirationDate(consent.getExpirationDate());
                 approved.setUser(consent.getUser());
                 approved.setClientId(consent.getClientId());
@@ -89,10 +117,11 @@ public class ConsentService {
             return encryptionService.decrypt(consent.getConsent());
         } catch (IllegalStateException ex) {
             credentialsRepository.delete(consent);
-            throw new EntityNotFoundException("Stored consent is invalid or expired for bank: " + bankId + ". Please request a new consent.");
+            throw new EntityNotFoundException(
+                    "Stored consent is invalid or expired for bank: " + bankId + ". Please request a new consent.");
         }
     }
-    
+
     public String checkConsentState(String bank_id, String request_id) {
         String path = CHECK_CONSENT_PATH + "/" + request_id;
         var headers = Map.of("x-fapi-interaction-id", props.getRequestingBankId());
@@ -104,31 +133,69 @@ public class ConsentService {
         return null;
     }
 
-    private void saveConsents(AccountConsentResponse response, String bankId, String clientId, ConsentType consentType) {
+    private void saveConsents(AccountConsentResponse response, String bankId, String clientId,
+            ConsentType consentType) {
         User user = userService.getCurrentUser();
-        credentialsRepository.findByUserAndBankAndClientId(user, bankService.getBankFromId(bankId), clientId)
+        accountConsentRepository.findByUserAndBank(user, bankService.getBankFromId(bankId))
                 .ifPresent(credentialsRepository::delete);
 
-        Credentials consent = new Credentials();
-        
-        if(response.auto_approved()) {
+        AccountConsent consent = new AccountConsent();
+
+        if (response.auto_approved()) {
             consent.setConsent(encryptionService.encrypt(response.consent_id()));
         } else {
             consent.setConsent(encryptionService.encrypt(response.request_id()));
         }
         consent.setBank(bankService.getBankFromId(bankId));
         consent.setStatus(ConsentStatus.valueOf(response.status().toLowerCase(Locale.ROOT)));
-        consent.setType(consentType);
-        consent.setExpirationDate(LocalDateTime.parse(response.created_at()).toInstant(ZoneOffset.UTC).plus(Duration.ofDays(90)));
+        // consent.setType(consentType);
+        consent.setExpirationDate(
+                LocalDateTime.parse(response.created_at()).toInstant(ZoneOffset.UTC).plus(Duration.ofDays(90)));
         consent.setUser(user);
         consent.setClientId(clientId);
-        credentialsRepository.save(consent);
+        // credentialsRepository.save(consent);
+        accountConsentRepository.save(consent);
     }
-    
+
+    private Credentials savePaymentConsent(PaymentConsentResponse response, BasePaymentRequestBody requestBody, String bankId) {
+        ConsentType consentType = ConsentType.valueOf(response.consent_type().toUpperCase());
+        switch (consentType) {
+            case ConsentType.SINGLE_USE -> {
+                return saveSinglePaymentConsent(response, requestBody, bankId);
+            }
+            // case ConsentType.MULTI_USE -> {
+            // }
+            // case ConsentType.VRP -> {
+            // }
+            default -> throw new IllegalArgumentException("Unexpected value: " + consentType);
+        }
+    }
+
+    private Credentials saveSinglePaymentConsent(PaymentConsentResponse response, BasePaymentRequestBody requestBody,
+            String bankId) {
+        User user = userService.getCurrentUser();
+        SinglePaymentConsent consent = new SinglePaymentConsent();
+        consent.setConsent(encryptionService.encrypt(response.consent_id()));
+        consent.setBank(bankService.getBankFromId(bankId));
+        consent.setClientId(requestBody.getClient_id());
+        consent.setStatus(ConsentStatus.valueOf(response.status().toLowerCase()));
+        consent.setUser(user);
+        consent.setUsed(false);
+        consent.setExpirationDate(Instant.parse(response.valid_until()));
+
+        if (requestBody instanceof SinglePaymentWithRecieverRequest) {
+            SinglePaymentWithRecieverRequest request = (SinglePaymentWithRecieverRequest) requestBody;
+            consent.setCreditorAccount(request.getCreditor_account());
+        }
+        SinglePaymentWithoutRecieverRequest request = (SinglePaymentWithoutRecieverRequest) requestBody;
+        consent.setDebtorAccount(request.getDebtor_account());
+        consent.setAmount(request.getAmount());
+        return singlePaymentConsentRepository.save(consent);
+    }
+
     @JsonIgnoreProperties(ignoreUnknown = true)
     public record CheckAccountConsentResponse(
-            @JsonProperty("data") Data data
-    ) {
+            @JsonProperty("data") Data data) {
         @JsonIgnoreProperties(ignoreUnknown = true)
         public record Data(
                 @JsonProperty(required = false) String consentId,
@@ -136,7 +203,7 @@ public class ConsentService {
                 Instant creationDateTime,
                 Instant statusUpdateDateTime,
                 List<String> permissions,
-                Instant expirationDateTime
-        ) {}
+                Instant expirationDateTime) {
+        }
     }
 }

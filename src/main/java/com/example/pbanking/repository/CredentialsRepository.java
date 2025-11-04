@@ -1,19 +1,11 @@
 package com.example.pbanking.repository;
 
-import java.util.Optional;
-
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
-import com.example.pbanking.model.BankEntity;
 import com.example.pbanking.model.Credentials;
-import com.example.pbanking.model.User;
-import com.example.pbanking.model.enums.ConsentType;
 
+@Repository
 public interface CredentialsRepository extends JpaRepository<Credentials, String> {
-    Optional<Credentials> findByUserAndBankAndType(User user, BankEntity bank, ConsentType type);
-
-    Optional<Credentials> findByUserAndBankAndClientId(User user, BankEntity bank, String clientId);
-    
-    Optional<Credentials> findByUserAndBankAndTypeAndClientId(User user, BankEntity bank, ConsentType type, String clientId);
 
 }

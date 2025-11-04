@@ -5,11 +5,18 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.pbanking.config.BanksProperties;
 import com.example.pbanking.dto.AccountsResponse.Account;
 import com.example.pbanking.dto.AvailableProductsResponse.Product;
+import com.example.pbanking.model.Credentials;
 import com.example.pbanking.dto.BankEntry;
+import com.example.pbanking.dto.MakePaymentResponse;
+import com.example.pbanking.dto.MakeSinglePaymentRequest;
+import com.example.pbanking.dto.PaymentStatus;
+import com.example.pbanking.dto.SinglePaymentWithRecieverRequest;
+import com.example.pbanking.dto.SinglePaymentWithoutRecieverRequest;
 import com.example.pbanking.dto.TransactionsResponse;
 import com.example.pbanking.service.BankTokenService;
 import com.example.pbanking.service.ConsentService;
 import com.example.pbanking.service.DataRecieveService;
+import com.example.pbanking.service.PaymentService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -20,6 +27,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
 
@@ -31,6 +40,7 @@ public class BankController {
     private final BanksProperties banks;
     private final ConsentService consentService;
     private final BankTokenService tokenService;
+    private final PaymentService paymentService;
     private final DataRecieveService dataService;
     
     @GetMapping("/api/banks")
@@ -66,8 +76,14 @@ public class BankController {
     
     // не забыть нормально эндпоинт сделать
     @GetMapping("/account-consent")
-    public void stabName() {
-        consentService.getReadConsent("sbank", "team062-1");
+    public String stabName() {
+        return consentService.getReadConsent("abank", "team062-1");
+    }
+
+    @PostMapping("/testPaymentConsent")
+    public MakePaymentResponse getPaymentConsent(@RequestBody MakeSinglePaymentRequest request) {
+        // return consentService.getPaymentConsent("abank", request);
+        return paymentService.makeSinglePayment(request, "team062-1");
     }
 }
     

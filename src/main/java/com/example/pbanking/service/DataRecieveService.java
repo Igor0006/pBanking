@@ -1,5 +1,6 @@
 package com.example.pbanking.service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -8,6 +9,7 @@ import org.springframework.stereotype.Service;
 import com.example.pbanking.config.TPPConfig;
 import com.example.pbanking.dto.AccountsResponse;
 import com.example.pbanking.dto.AvailableProductsResponse;
+import com.example.pbanking.dto.BalanceResponse;
 import com.example.pbanking.dto.TransactionsResponse;
 import com.example.pbanking.dto.AccountsResponse.Account;
 import com.example.pbanking.dto.AvailableProductsResponse.Product;
@@ -25,6 +27,7 @@ public class DataRecieveService {
     private final static String ACCOUNTS_PATH = "/accounts";
     private final static String TRANSACTIONS_PATH = "/transactions";
     private final static String AVAILABLE_PRODUCTS_PATH = "/products";
+    private static final String BALANCE_PATH = "/accounts/%s/balances";
     
     // take client_id in futire form security context 
     public List<Account> getAccounts(String bank_id, String client_id) {
@@ -43,5 +46,17 @@ public class DataRecieveService {
     
     public List<Product> getAvailableProducts(String bank_id) {
         return wc.get(bank_id, AVAILABLE_PRODUCTS_PATH, null, null, tokenService.getBankToken(bank_id), AvailableProductsResponse.class).products();
+    }
+
+    public BigDecimal getAccountBalance(String bankId, String accountId) {
+        var headersMap = Map.of("x-consent-id",
+                consentService.getConsentForBank(bankId, ConsentType.READ), "x-requesting-bank",
+                props.getRequestingBankId());
+
+        BalanceResponse response = wc.get(bankId, String.format(BALANCE_PATH, accountId), null,
+                headersMap, tokenService.getBankToken(bankId), BalanceResponse.class);
+
+        return new BigDecimal(response.amount());
+        
     }
 }
