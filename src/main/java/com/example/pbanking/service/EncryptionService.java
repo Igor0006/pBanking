@@ -7,6 +7,9 @@ import org.springframework.security.crypto.encrypt.TextEncryptor;
 import org.springframework.security.crypto.keygen.KeyGenerators;
 import org.springframework.stereotype.Service;
 
+import com.example.pbanking.exception.BadRequestException;
+import com.example.pbanking.exception.InternalServerException;
+
 /**
  * Provides symmetric encryption utilities for storing sensitive data
  * and delegates password hashing to BCrypt.
@@ -19,7 +22,7 @@ public class EncryptionService {
     public EncryptionService(@Value("${encryption.secret-key}") String secretKey,
                              BCryptPasswordEncoder passwordEncoder) {
         if (secretKey == null || secretKey.isBlank()) {
-            throw new IllegalStateException("Property 'encryption.secret-key' must be provided.");
+            throw new InternalServerException("Property 'encryption.secret-key' must be provided.");
         }
         this.secretKey = secretKey;
         this.passwordEncoder = passwordEncoder;
@@ -47,7 +50,7 @@ public class EncryptionService {
         }
         int idx = stored.indexOf(':');
         if (idx <= 0) {
-            throw new IllegalArgumentException("Encrypted value has no salt prefix (expected 'salt:cipherHex').");
+            throw new BadRequestException("Encrypted value has no salt prefix (expected 'salt:cipherHex').");
         }
         String salt = stored.substring(0, idx);
         String cipherHex = stored.substring(idx + 1);

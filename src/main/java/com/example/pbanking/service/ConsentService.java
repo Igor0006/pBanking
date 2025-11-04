@@ -10,8 +10,9 @@ import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
-import com.example.pbanking.model.Credentials;
 import com.example.pbanking.config.TPPConfig;
+import com.example.pbanking.exception.NotFoundException;
+import com.example.pbanking.model.Credentials;
 import com.example.pbanking.model.User;
 import com.example.pbanking.model.enums.ConsentStatus;
 import com.example.pbanking.model.enums.ConsentType;
@@ -21,7 +22,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.example.pbanking.dto.AccountConsentRequestBody;
 import com.example.pbanking.dto.AccountConsentResponse;
 
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -60,7 +60,7 @@ public class ConsentService {
     public String getConsentForBank(String bankId, ConsentType consentType) {
         User user = userService.getCurrentUser();
         Credentials consent = credentialsRepository.findByUserAndBankAndType(user, bankService.getBankFromId(bankId), consentType)
-                .orElseThrow(() -> new EntityNotFoundException("No such consent for bank: " + bankId));
+                .orElseThrow(() -> new NotFoundException("Consent not found for bank: " + bankId));
 
         if (consent.getStatus().equals(ConsentStatus.pending)) {
             String pendingId = encryptionService.decrypt(consent.getConsent());
@@ -80,13 +80,13 @@ public class ConsentService {
                 credentialsRepository.save(approved);
                 return approvedConsent;
             }
-            throw new EntityNotFoundException("Consent is not aprroved yet");
+            throw new NotFoundException("Consent is not approved yet");
         }
         try {
             return encryptionService.decrypt(consent.getConsent());
-        } catch (IllegalStateException ex) {
+        } catch (RuntimeException ex) {
             credentialsRepository.delete(consent);
-            throw new EntityNotFoundException("Stored consent is invalid or expired for bank: " + bankId + ". Please request a new consent.");
+            throw new NotFoundException("Stored consent is invalid or expired for bank: " + bankId + ". Please request a new consent.");
         }
     }
     

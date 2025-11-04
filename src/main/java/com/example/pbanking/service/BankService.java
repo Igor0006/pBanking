@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 
 import com.example.pbanking.config.BanksProperties;
 import com.example.pbanking.dto.BankEntry;
+import com.example.pbanking.exception.InternalServerException;
+import com.example.pbanking.exception.NotFoundException;
 import com.example.pbanking.model.BankEntity;
 import com.example.pbanking.repository.BankRepository;
 
@@ -46,13 +48,13 @@ public class BankService {
             }
         }
 
-        throw new IllegalArgumentException("No such bank: " + bankId);
+        throw new NotFoundException("Bank not found: " + bankId);
     }
     
     @Transactional
     public void saveToken(String bankId, String token, Instant expiresAt) {
         if (token == null) {
-            throw new IllegalArgumentException("Recieved token for bank " + bankId + " is null");
+            throw new InternalServerException("Received token for bank " + bankId + " is null");
         }
         BankEntity bank = getBankFromId(bankId);
         bank.setToken(encryptionService.encrypt(token));

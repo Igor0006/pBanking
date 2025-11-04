@@ -7,11 +7,13 @@ import java.util.Objects;
 
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
-import org.springframework.util.Assert;
 
 import ai.catboost.CatBoostError;
 import ai.catboost.CatBoostModel;
 import ai.catboost.CatBoostPredictions;
+
+import com.example.pbanking.exception.BadRequestException;
+import com.example.pbanking.exception.InternalServerException;
 
 @Service
 public class PredictExpenseService {
@@ -29,7 +31,7 @@ public class PredictExpenseService {
             cur = CatBoostModel.loadModel(is1);
             next = CatBoostModel.loadModel(is2);
         } catch (IOException | CatBoostError e) {
-            throw new IllegalStateException("Failed to load expense prediction models", e);
+            throw new InternalServerException("Failed to load expense prediction models", e);
         }
         this.curModel = cur;
         this.nextModel = next;
@@ -40,7 +42,7 @@ public class PredictExpenseService {
             CatBoostPredictions pred = curModel.predict(features, (String[]) null);
             return pred.get(0, 0);
         } catch (CatBoostError e) {
-            throw new IllegalStateException("Failed to predict current month expenses", e);
+            throw new InternalServerException("Failed to predict current month expenses", e);
         }
     }
 
@@ -49,7 +51,7 @@ public class PredictExpenseService {
             CatBoostPredictions pred = nextModel.predict(features, (String[]) null);
             return pred.get(0, 0);
         } catch (CatBoostError e) {
-            throw new IllegalStateException("Failed to predict next month expenses", e);
+            throw new InternalServerException("Failed to predict next month expenses", e);
         }
     }
 
@@ -68,7 +70,9 @@ public class PredictExpenseService {
     }
 
     public ExpenseForecast forecast(List<Double> history, int monthNum) {
-        Assert.notEmpty(history, "Expense history must not be empty");
+        if (history == null || history.isEmpty()) {
+            throw new BadRequestException("Expense history must not be empty");
+        }
         System.out.println(history);
         float[] feats = buildFeatures(history, monthNum);
         double base = history.get(0);

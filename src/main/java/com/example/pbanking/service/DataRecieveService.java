@@ -20,6 +20,7 @@ import com.example.pbanking.dto.AvailableProductsResponse;
 import com.example.pbanking.dto.StatisticReposnse;
 import com.example.pbanking.dto.TransactionsResponse;
 import com.example.pbanking.dto.AvailableProductsResponse.Product;
+import com.example.pbanking.exception.NotFoundException;
 import com.example.pbanking.model.enums.ConsentType;
 import com.example.pbanking.repository.CredentialsRepository.BankClientPair;
 import com.example.pbanking.dto.TransactionsResponse.TransactionStatus;
@@ -80,7 +81,7 @@ public class DataRecieveService {
     public StatisticReposnse getStatistic() {
         Map<YearMonth, BigDecimal> map = getLastYearExpenses();
         if (map.isEmpty()) {
-            throw new NullPointerException("No transactions in users accounts");
+            throw new NotFoundException("No transactions found for the current users");
         }
 
         YearMonth latestMonth = map.keySet().stream()
@@ -108,7 +109,7 @@ public class DataRecieveService {
                 .minusMonths(12);
 
         LocalDateTime cursor = start;
-        for (int i = 0; i < 13; i++) {
+        for (int i = 0; i < 14; i++) {
             YearMonth ym = YearMonth.from(cursor);
             stats.put(ym, BigDecimal.ZERO);
             cursor = cursor.plusMonths(1);
