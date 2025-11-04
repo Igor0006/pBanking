@@ -18,6 +18,7 @@ import com.example.pbanking.config.TPPConfig;
 import com.example.pbanking.dto.AccountSummary;
 import com.example.pbanking.dto.AccountsResponse;
 import com.example.pbanking.dto.AvailableProductsResponse;
+import com.example.pbanking.dto.BalanceResponse;
 import com.example.pbanking.dto.StatisticReposnse;
 import com.example.pbanking.dto.TransactionsResponse;
 import com.example.pbanking.dto.AvailableProductsResponse.Product;
@@ -43,6 +44,7 @@ public class DataRecieveService {
     private final static String ACCOUNTS_PATH = "/accounts";
     private final static String TRANSACTIONS_PATH = "/transactions";
     private final static String AVAILABLE_PRODUCTS_PATH = "/products";
+    private static final String BALANCE_PATH = "/accounts/%s/balances";
     
     public List<AccountSummary> getAccounts(String bank_id, String client_id) {
         var headersMap = Map.of("x-requesting-bank", props.getRequestingBankId(), "x-consent-id",  consentService.getConsentForBank(bank_id, ConsentType.READ));
@@ -185,6 +187,16 @@ public class DataRecieveService {
         return wc.get(bank_id, AVAILABLE_PRODUCTS_PATH, null, null, tokenService.getBankToken(bank_id), AvailableProductsResponse.class).products();
     }
 
+    public BigDecimal getAccountBalance(String bankId, String accountId) {
+        var headersMap = Map.of("x-consent-id",
+                consentService.getConsentForBank(bankId, ConsentType.READ), "x-requesting-bank",
+                props.getRequestingBankId());
+
+        BalanceResponse response = wc.get(bankId, String.format(BALANCE_PATH, accountId), null,
+                headersMap, tokenService.getBankToken(bankId), BalanceResponse.class);
+
+        return new BigDecimal(response.amount());
+        
     private void forEachTransaction(String from, String to, Consumer<TransactionsResponse.Transaction> consumer) {
         Map<String, String> queryMap = Map.of("from_booking_date_time", from, "to_booking_date_time", to);
         List<BankClientPair> list = userService.getUserClientIds();

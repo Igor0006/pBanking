@@ -1,0 +1,18 @@
+package com.example.pbanking.dto;
+
+import java.math.BigDecimal;
+import java.util.Optional;
+
+public record MakeSinglePaymentRequest (
+    String accountId,
+    String debtor_account,
+    String creditor_account,
+    String creditor_name,
+    String requesting_bank,
+    Optional<String> creditor_bank,
+    BigDecimal amount,
+    String currency,
+    String reference
+) {
+    
+}
