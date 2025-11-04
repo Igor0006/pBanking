@@ -19,8 +19,19 @@ public class ConsentController {
     private final ConsentService consentService;
     
     @PostMapping("/account")
-    public ResponseEntity<AccountConsentResponse> getConsent(@RequestBody AccountConsentApiRequest request) {
+    public ResponseEntity<AccountConsentResponse> getAccountConsent(@RequestBody AccountConsentApiRequest request) {
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(consentService.getReadConsent(request.bank_id, request.client_id));
     }
     public record AccountConsentApiRequest(String bank_id, String client_id) {}
+    
+    @PostMapping("/singlePayment")
+    public String getSinglePaymentConsent(@RequestBody String entity) {        
+        return entity;
+    }
+    
+    @PostMapping("/multiplePayment")
+    public String getMultiplePaymentConsent(@RequestBody String entity) {        
+        return entity;
+    }
+  
 }

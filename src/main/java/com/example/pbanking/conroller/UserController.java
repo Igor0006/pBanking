@@ -8,13 +8,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.pbanking.dto.BankClientLink;
 import com.example.pbanking.dto.request.AuthUserRequest;
 import com.example.pbanking.dto.response.AuthResponse;
-import com.example.pbanking.exception.BusinessException;
 import com.example.pbanking.repository.CredentialsRepository.BankClientPair;
 import com.example.pbanking.service.UserService;
 
@@ -47,13 +45,5 @@ public class UserController {
     @GetMapping("/bankClientLinks")
     public ResponseEntity<List<BankClientLink>> getMethodName() {
         return ResponseEntity.status(201).body(userService.getAllBankClientLinks());
-    }
-
-    @GetMapping("/testExceptionHandler")
-    public String testExceptionHandler(@RequestParam(required = false, defaultValue = "true") boolean exception) {
-        if (exception) {
-            throw new BusinessException("BusinessException in testExceptionHandler");
-        }
-        return "ok";
     }
 }
