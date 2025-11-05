@@ -13,16 +13,16 @@ import lombok.Getter;
 
 // }
 
-@Getter
-public class SinglePaymentWithoutRecieverRequest extends BasePaymentRequestBody {
-    protected BigDecimal amount;
-    protected String reference;
+// @Getter
+// public class SinglePaymentWithoutRecieverRequest extends BasePaymentRequestBody {
+//     protected BigDecimal amount;
+//     protected String reference;
 
-    public SinglePaymentWithoutRecieverRequest(String requesting_bank, String client_id, String consent_type,
-            BigDecimal amount, String debtor_account, String reference) {
-        super(requesting_bank, client_id, consent_type, debtor_account);
-        this.amount = amount;
-        this.reference = reference;
-    }
+//     public SinglePaymentWithoutRecieverRequest(String requesting_bank, String client_id, String consent_type,
+//             BigDecimal amount, String debtor_account, String reference) {
+//         super(requesting_bank, client_id, consent_type, debtor_account);
+//         this.amount = amount;
+//         this.reference = reference;
+//     }
 
-}
+// }

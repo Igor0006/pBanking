@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import com.example.pbanking.model.BankEntity;
 import com.example.pbanking.model.SinglePaymentConsent;
 import com.example.pbanking.model.User;
 
@@ -18,4 +19,6 @@ public interface SinglePaymentConsentRepository extends JpaRepository<SinglePaym
 
     Optional<SinglePaymentConsent> findByDebtorAccountAndCreditorAccount(@Param("debtorAccount") String debtorAccount,
             @Param("creditorAccount") String creditorAccount);
+
+    Optional<SinglePaymentConsent> findByUserAndBank(User user, BankEntity bank);
 }

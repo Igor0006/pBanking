@@ -8,7 +8,7 @@ public record MakeSinglePaymentRequest (
     String debtor_account,
     String creditor_account,
     String creditor_name,
-    String requesting_bank,
+    String debtor_bank,
     Optional<String> creditor_bank,
     BigDecimal amount,
     String currency,
