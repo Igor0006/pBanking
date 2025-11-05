@@ -1,0 +1,31 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      DB_URL: ${DB_URL:-db:5432/pbanking}
+      DB_USERNAME: ${DB_USERNAME:-pbanking}
+      DB_PASSWORD: ${DB_PASSWORD:-pbanking}
+      SECRET_KEY: ${SECRET_KEY:?SECRET_KEY not set}
+      TEAM_CODE: ${TEAM_CODE:?TEAM_CODE not set}
+      TEAM_SECRET: ${TEAM_SECRET:?TEAM_SECRET not set}
+    depends_on:
+      - db
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-pbanking}
+      POSTGRES_USER: ${POSTGRES_USER:-pbanking}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pbanking}
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+volumes:
+  db-data:

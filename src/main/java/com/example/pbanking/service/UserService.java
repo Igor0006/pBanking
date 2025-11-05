@@ -62,7 +62,8 @@ public class UserService {
     }
     
     public UserInformation getUserInfo() {
-        return new UserInformation(getAllBankClientLinks(), getCurrentUser().getStatus());
+        var currentUser = getCurrentUser();
+        return new UserInformation(getAllBankClientLinks(), currentUser.getStatus(), currentUser.getStatusExpireDate());
     }
 
     public List<BankClientLink> getAllBankClientLinks() {
