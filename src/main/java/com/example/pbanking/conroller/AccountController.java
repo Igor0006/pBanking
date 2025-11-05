@@ -33,13 +33,13 @@ public class AccountController {
     
     @PostMapping("/setType")
     public ResponseEntity<Void> setAccountType(@RequestBody UpdateTypeRequest request) {    
-        accountService.setTypeForAccount(request.id(), request.type());    
+        accountService.setTypeForAccount(request.bankId(), request.id(), request.type());    
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(null);
     }
     
-    @PostMapping("/setType")
+    @PostMapping("/setDescription")
     public ResponseEntity<Void> setAccountDescription(@RequestBody UpdateDescriptionRequest request) {
-        accountService.setDescription(request.id(), request.text());
+        accountService.setDescription(request.bankId(), request.id(), request.text());
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(null);
     }
     

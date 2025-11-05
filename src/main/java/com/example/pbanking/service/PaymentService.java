@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 
 import com.example.pbanking.dto.BankPaymentRequest;
 import com.example.pbanking.dto.request.MakeSinglePaymentRequest;
-import com.example.pbanking.dto.request.SinglePaymentWithReceiverRequest;
 import com.example.pbanking.dto.response.MakePaymentResponse;
 import com.example.pbanking.exception.NotFoundException;
 import com.example.pbanking.model.User;

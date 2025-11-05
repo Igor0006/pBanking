@@ -29,7 +29,6 @@ public class ConsentController {
     public record AccountConsentApiRequest(String bank_id, String client_id) {
     }
 
-    
     @PostMapping("/singlePayment")
     public ResponseEntity<String> getSinglePaymentConsent(@RequestBody SinglePaymentConsentApiRequest request) {
         consentService.getPaymentConsent(request, ConsentType.SINGLE_USE);

@@ -8,6 +8,7 @@ import com.example.pbanking.config.TPPConfig;
 import com.example.pbanking.dto.response.TransactionsResponse;
 import com.example.pbanking.model.enums.ConsentType;
 import com.example.pbanking.model.enums.PurposeType;
+import com.example.pbanking.repository.AccountRepository;
 import com.example.pbanking.repository.TransactionRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,7 @@ public class TransactionService {
     private final TPPConfig props;
     private final ConsentService consentService;
     private final TransactionRepository transactionRepository;
+    private final AccountRepository accountRepository;
     private final BankTokenService tokenService;
     private final WebClientExecutor wc;
 
@@ -36,8 +38,20 @@ public class TransactionService {
     public TransactionsResponse getTransactionsPrime(String bank_id, String account_id, Map<String, String> queryMap) {
         var response = getTransactions(bank_id, account_id, queryMap);
         for (var transaction : response.transactions()) {
-            transactionRepository.findTypeByTransactionId(transaction.getTransactionId())
-                .ifPresent(transaction::setType);
+            boolean typeAssigned = false;
+            var transactionAccountId = transaction.getAccountId();
+            if (transactionAccountId != null && !transactionAccountId.isBlank()) {
+                var account = accountRepository.findByAccountIdAndBankId(transactionAccountId, bank_id);
+                if (account.isPresent() && account.get().getType() != null) {
+                    transaction.setType(account.get().getType());
+                    typeAssigned = true;
+                }
+            }
+
+            if (!typeAssigned) {
+                transactionRepository.findTypeByTransactionId(transaction.getTransactionId())
+                        .ifPresent(transaction::setType);
+            }
         }
         return response;
     }
