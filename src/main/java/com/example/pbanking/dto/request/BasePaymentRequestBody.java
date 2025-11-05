@@ -1,6 +1,4 @@
-package com.example.pbanking.dto;
-
-import org.springframework.beans.factory.annotation.Value;
+package com.example.pbanking.dto.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -8,7 +6,6 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public abstract class BasePaymentRequestBody {
-    @Value("${bank.id}")
     protected String requesting_bank;
     
     protected String client_id;

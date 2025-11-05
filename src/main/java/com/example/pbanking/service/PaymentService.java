@@ -5,13 +5,10 @@ import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
-import com.example.pbanking.config.TPPConfig;
-import com.example.pbanking.dto.BalanceResponse;
 import com.example.pbanking.dto.IntrabankPayment;
-import com.example.pbanking.dto.MakePaymentResponse;
-import com.example.pbanking.dto.MakeSinglePaymentRequest;
-import com.example.pbanking.dto.PaymentStatus;
-import com.example.pbanking.dto.SinglePaymentWithRecieverRequest;
+import com.example.pbanking.dto.request.MakeSinglePaymentRequest;
+import com.example.pbanking.dto.request.SinglePaymentWithRecieverRequest;
+import com.example.pbanking.dto.response.MakePaymentResponse;
 import com.example.pbanking.model.enums.ConsentType;
 
 import lombok.RequiredArgsConstructor;
@@ -21,10 +18,9 @@ import lombok.RequiredArgsConstructor;
 public class PaymentService {
     private final ConsentService consentService;
     private final BankTokenService tokenService;
-    private final DataRecieveService dataRecieveService;
+    private final AccountService accountService;
     private final WebClientExecutor wc;
     private static final String PAYMENT_PATH = "/payments";
-    private final TPPConfig props;
 
     public MakePaymentResponse makeSinglePayment(MakeSinglePaymentRequest request, String clientId) {
         checkBalance(request);
@@ -51,7 +47,7 @@ public class PaymentService {
     }
 
     private void checkBalance(MakeSinglePaymentRequest request) {
-        BigDecimal balance = dataRecieveService.getAccountBalance(request.requesting_bank(), request.accountId());
+        BigDecimal balance = accountService.getAccountBalance(request.requesting_bank(), request.accountId());
         if (request.amount().compareTo(balance) >= 1) {
             throw new RuntimeException("Insufficient funds on the balance sheet");
         }
