@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import com.example.pbanking.dto.BankClientLink;
 import com.example.pbanking.dto.request.AuthUserRequest;
 import com.example.pbanking.dto.response.AuthResponse;
+import com.example.pbanking.dto.response.UserInformation;
 import com.example.pbanking.exception.ConflictException;
 import com.example.pbanking.exception.NotFoundException;
 import com.example.pbanking.exception.UnauthorizedException;
@@ -58,6 +59,10 @@ public class UserService {
 
         String token = jwtService.generateToken(request.username());
         return new AuthResponse(token, jwtService.getExpirationTime());
+    }
+    
+    public UserInformation getUserInfo() {
+        return new UserInformation(getAllBankClientLinks(), getCurrentUser().getStatus());
     }
 
     public List<BankClientLink> getAllBankClientLinks() {
