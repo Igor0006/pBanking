@@ -1,5 +1,6 @@
 package com.example.pbanking.model;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -41,6 +42,8 @@ public class User {
     private String password;
     
     private UserStatus status = UserStatus.DEFAULT;
+    
+    private Instant statusExpireDate = null;
 
     @OneToMany(mappedBy = "user")
     @JsonManagedReference

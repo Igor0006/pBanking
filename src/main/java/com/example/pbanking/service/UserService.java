@@ -1,5 +1,7 @@
 package com.example.pbanking.service;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -12,8 +14,11 @@ import com.example.pbanking.exception.ConflictException;
 import com.example.pbanking.exception.NotFoundException;
 import com.example.pbanking.exception.UnauthorizedException;
 import com.example.pbanking.model.User;
+import com.example.pbanking.model.enums.UserStatus;
 import com.example.pbanking.repository.CredentialsRepository;
-import com.example.pbanking.repository.CredentialsRepository.BankClientPair;
+
+import jakarta.transaction.Transactional;
+
 import com.example.pbanking.repository.UserRepository;
 
 import lombok.AllArgsConstructor;
@@ -54,14 +59,21 @@ public class UserService {
         String token = jwtService.generateToken(request.username());
         return new AuthResponse(token, jwtService.getExpirationTime());
     }
-    
-    public List<BankClientPair> getUserClientIds() {
-        return credentialsRepository.findBankClientPairsByUser(getCurrentUser());
-    }
 
     public List<BankClientLink> getAllBankClientLinks() {
         return credentialsRepository.findAllBankClientPairs().stream()
                 .map(pair -> new BankClientLink(pair.getBankId(), pair.getClientId()))
                 .toList();
+    }
+    
+    @Transactional
+    public void setStatus(UserStatus status, int days) {
+        User u = getCurrentUser();
+        u.setStatus(status);
+        if (status == UserStatus.PREMIUM)
+            u.setStatusExpireDate(Instant.now().plus(days, ChronoUnit.DAYS));
+        else {
+            u.setStatusExpireDate(null);
+        }
     }
 }

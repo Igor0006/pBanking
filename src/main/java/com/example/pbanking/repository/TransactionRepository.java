@@ -14,4 +14,5 @@ public interface TransactionRepository extends JpaRepository<Transaction, String
 
     @Query("SELECT t.type FROM Transaction t WHERE t.transactionId = :id")
     Optional<TransactionType> findTypeByTransactionId(@Param("id") String id);
+
 }

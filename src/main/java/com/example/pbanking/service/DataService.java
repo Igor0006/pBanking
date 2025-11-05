@@ -15,7 +15,7 @@ import org.springframework.stereotype.Service;
 
 
 import com.example.pbanking.exception.NotFoundException;
-import com.example.pbanking.repository.CredentialsRepository.BankClientPair;
+import com.example.pbanking.dto.BankClientLink;
 import com.example.pbanking.dto.response.StatisticReposnse;
 import com.example.pbanking.dto.response.TransactionsResponse;
 import com.example.pbanking.dto.response.TransactionsResponse.TransactionStatus;
@@ -122,10 +122,10 @@ public class DataService {
 
     private void forEachTransaction(String from, String to, Consumer<TransactionsResponse.Transaction> consumer) {
         Map<String, String> queryMap = Map.of("from_booking_date_time", from, "to_booking_date_time", to);
-        List<BankClientPair> list = userService.getUserClientIds();
+        List<BankClientLink> list = userService.getAllBankClientLinks();
         for (var pair : list) {
-            for (var account : accountService.getAccounts(pair.getBankId(), pair.getClientId())) {
-                TransactionsResponse response = transactionService.getTransactions(pair.getBankId(), account.accountId(), queryMap);
+            for (var account : accountService.getAccounts(pair.bankId(), pair.clientId())) {
+                TransactionsResponse response = transactionService.getTransactions(pair.bankId(), account.accountId(), queryMap);
                 if (response == null) {
                     continue;
                 }

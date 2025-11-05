@@ -11,5 +11,6 @@ import com.example.pbanking.model.User;
 @Repository
 public interface UserRepository extends JpaRepository<User, UUID> {
     Optional<User> findByUsername(String username);
+    
     boolean existsByUsername(String username);
 }

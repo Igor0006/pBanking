@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import com.example.pbanking.config.TPPConfig;
 import com.example.pbanking.dto.response.TransactionsResponse;
 import com.example.pbanking.model.enums.ConsentType;
+import com.example.pbanking.model.enums.TransactionType;
 import com.example.pbanking.repository.TransactionRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -39,5 +40,18 @@ public class TransactionService {
                 .ifPresent(transaction::setType);
         }
         return response;
+    }
+
+    public void setTypeForTransaction(String transaction_id, TransactionType type) {
+        var transaction = transactionRepository.findByTransactionId(transaction_id)
+                .orElseGet(() -> {
+                    var newTransaction = new com.example.pbanking.model.Transaction();
+                    newTransaction.setTransactionId(transaction_id);
+                    
+                    return newTransaction;
+                });
+
+        transaction.setType(type);
+        transactionRepository.save(transaction);
     }
 }
