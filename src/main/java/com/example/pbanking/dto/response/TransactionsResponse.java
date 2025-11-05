@@ -1,6 +1,6 @@
 package com.example.pbanking.dto.response;
 
-import com.example.pbanking.model.enums.TransactionType;
+import com.example.pbanking.model.enums.PurposeType;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
@@ -56,7 +56,7 @@ public class TransactionsResponse {
         private String transactionId;
 
         @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-        private TransactionType type = TransactionType.NONE;
+        private PurposeType type = PurposeType.NONE;
         private Amount amount;
         private CreditDebitIndicator creditDebitIndicator;
         private TransactionStatus status;

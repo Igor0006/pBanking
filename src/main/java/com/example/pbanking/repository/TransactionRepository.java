@@ -7,12 +7,12 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.example.pbanking.model.Transaction;
-import com.example.pbanking.model.enums.TransactionType;
+import com.example.pbanking.model.enums.PurposeType;
 
 public interface TransactionRepository extends JpaRepository<Transaction, String>  {
     Optional<Transaction> findByTransactionId(String transactionId);
 
     @Query("SELECT t.type FROM Transaction t WHERE t.transactionId = :id")
-    Optional<TransactionType> findTypeByTransactionId(@Param("id") String id);
+    Optional<PurposeType> findTypeByTransactionId(@Param("id") String id);
 
 }

@@ -12,12 +12,12 @@ import lombok.Data;
 
 @Data
 @Entity
-@Table(name = "transactions")
-public class Transaction {
+@Table(name = "accounts")
+public class Account {
     @Id
-    @Column(name = "transaction_id")
-    private String transactionId;
-
+    @Column(name = "account_id")
+    private String accountId;
+    
     @Enumerated(EnumType.STRING)
     private PurposeType type;
 }
