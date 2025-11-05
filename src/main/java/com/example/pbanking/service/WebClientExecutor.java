@@ -56,7 +56,7 @@ public class WebClientExecutor {
                 .path(path)
                 .queryMap(queryParams)
                 .build();
-        log.debug("POST {}", uri);
+        log.debug("POST {}", uri); 
         try {
             return webClient.post()
                     .uri(uri)

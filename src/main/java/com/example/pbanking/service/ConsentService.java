@@ -12,9 +12,10 @@ import org.springframework.stereotype.Service;
 
 import com.example.pbanking.config.TPPConfig;
 import com.example.pbanking.dto.request.AccountConsentRequestBody;
+import com.example.pbanking.dto.request.BasePaymentConsentApiRequest;
 import com.example.pbanking.dto.request.BasePaymentRequestBody;
-import com.example.pbanking.dto.request.SinglePaymentWithRecieverRequest;
-import com.example.pbanking.dto.request.SinglePaymentWithoutRecieverRequest;
+import com.example.pbanking.dto.request.SinglePaymentConsentApiRequest;
+import com.example.pbanking.dto.request.SinglePaymentWithReceiverRequest;
 import com.example.pbanking.dto.response.AccountConsentResponse;
 import com.example.pbanking.dto.response.CheckAccountConsentResponse;
 import com.example.pbanking.dto.response.PaymentConsentResponse;
@@ -26,6 +27,7 @@ import com.example.pbanking.model.User;
 import com.example.pbanking.model.enums.ConsentStatus;
 import com.example.pbanking.model.enums.ConsentType;
 import com.example.pbanking.repository.AccountConsentRepository;
+import com.example.pbanking.repository.CredentialsRepository;
 import com.example.pbanking.repository.SinglePaymentConsentRepository;
 
 import jakarta.transaction.Transactional;
@@ -43,6 +45,7 @@ public class ConsentService {
     private final UserService userService;
     private final EncryptionService encryptionService;
     private final BankService bankService;
+    private final CredentialsRepository credentialsRepository;
     private final AccountConsentRepository accountConsentRepository;
     private final SinglePaymentConsentRepository singlePaymentConsentRepository;
     private final TPPConfig tppConfig;
@@ -74,35 +77,53 @@ public class ConsentService {
     }
 
     @Transactional
-    public String getPaymentConsent(String bankId, BasePaymentRequestBody requestBody) {
+    public PaymentConsentResponse getPaymentConsent(BasePaymentConsentApiRequest requestBody, ConsentType consentType) {
         Map<String, String> headers = new HashMap<>();
-        if (requestBody.getRequesting_bank() != null && !requestBody.getRequesting_bank().isBlank()) {
-            headers.put("X-Requesting-Bank", requestBody.getRequesting_bank());
-        }
+        headers.put("X-Requesting-Bank", tppConfig.getRequestingBankId());
+
+        User user = userService.getCurrentUser();
+
+        String clientId = credentialsRepository.findClientIdByUserAndBank(user.getId(), requestBody.getBank_id())
+                .orElseThrow(() -> new NotFoundException(
+                        "No client id for user: " + user.getUsername() + " and bank: " + requestBody.getBank_id()));
+
+        BasePaymentRequestBody bankRequest = switch (consentType) {
+            case SINGLE_USE -> {
+                SinglePaymentConsentApiRequest single = (SinglePaymentConsentApiRequest) requestBody;
+                yield new SinglePaymentWithReceiverRequest(tppConfig.getRequestingBankId(), clientId,
+                        consentType.toString().toLowerCase(Locale.ROOT), single.getAmount(), single.getCurrency(), single.getDebtor_account(),
+                        single.getCreditor_account(), single.getCreditor_name(), single.getReference());
+            }
+            default -> throw new NotFoundException("Not a payment consent: " + consentType);
+        };
 
         PaymentConsentResponse response = webClientExecutor.post(
-                bankId,
+                requestBody.getBank_id(),
                 PAYMENT_PATH,
-                requestBody,
+                bankRequest,
                 null,
                 headers,
-                tokenService.getBankToken(bankId),
+                tokenService.getBankToken(requestBody.getBank_id()),
                 PaymentConsentResponse.class);
 
-        savePaymentConsent(response, requestBody, bankId);
-        return response.consent_id();
+        savePaymentConsent(response, requestBody, clientId);
+        return response;
     }
 
+    // FIXME: не учитываются детали консента платежа (creditor_account, max_uses,...)
+    // с HashMap
     public String getConsentForBank(String bankId, ConsentType consentType) {
         User user = userService.getCurrentUser();
         BankEntity bank = bankService.getBankFromId(bankId);
 
         return switch (consentType) {
             case READ -> resolveAccountConsent(bankId, user, bank);
+            case SINGLE_USE -> resolveSingPaymentConsent(bankId, user, bank);
             default -> throw new NotFoundException("Unsupported consent type: " + consentType);
         };
     }
 
+    // FIXME: обновление isUsed, учитывать isUsed при поиске
     private String resolveAccountConsent(String bankId, User user, BankEntity bank) {
         AccountConsent consent = accountConsentRepository.findByUserAndBank(user, bank)
                 .orElseThrow(() -> new NotFoundException("Consent not found for bank: " + bankId));
@@ -151,7 +172,8 @@ public class ConsentService {
                 .ifPresent(accountConsentRepository::delete);
 
         AccountConsent consent = new AccountConsent();
-        String consentValue = Boolean.TRUE.equals(response.auto_approved()) ? response.consent_id() : response.request_id();
+        String consentValue = Boolean.TRUE.equals(response.auto_approved()) ? response.consent_id()
+                : response.request_id();
 
         if (consentValue != null) {
             consent.setConsent(encryptionService.encrypt(consentValue));
@@ -167,40 +189,78 @@ public class ConsentService {
         accountConsentRepository.save(consent);
     }
 
-    private void savePaymentConsent(PaymentConsentResponse response, BasePaymentRequestBody requestBody, String bankId) {
+    private String resolveSingPaymentConsent(String bankId, User user, BankEntity bank) {
+        SinglePaymentConsent consent = singlePaymentConsentRepository.findByUserAndBank(user, bank)
+                .orElseThrow(() -> new NotFoundException("Consent not found for bank: " +
+                        bankId));
+        return resolveSinglePaymentConsentValue(consent, bankId);
+    }
+
+    private String resolveSinglePaymentConsentValue(SinglePaymentConsent consent,
+            String bankId) {
+        if (consent.getStatus() == ConsentStatus.pending) {
+            String pendingId = encryptionService.decrypt(consent.getConsent());
+            String approvedConsent = checkPaymentConsentState(bankId, pendingId);
+            if (approvedConsent == null) {
+                throw new NotFoundException("Consent is not approved yet");
+            }
+
+            consent.setConsent(approvedConsent);
+            singlePaymentConsentRepository.save(consent);
+            return approvedConsent;
+        }
+
+        try {
+            return encryptionService.decrypt(consent.getConsent());
+        } catch (RuntimeException ex) {
+            singlePaymentConsentRepository.delete(consent);
+            throw new NotFoundException(
+                    "Stored consent is invalid or expired for bank: " + bankId + ". Please request a new consent.");
+        }
+    }
+
+    private void savePaymentConsent(PaymentConsentResponse response, BasePaymentConsentApiRequest requestBody,
+            String clientId) {
         ConsentType consentType = ConsentType.valueOf(response.consent_type().toUpperCase(Locale.ROOT));
         if (consentType == ConsentType.SINGLE_USE) {
-            saveSinglePaymentConsent(response, requestBody, bankId);
+            saveSinglePaymentConsent(response, requestBody, clientId);
             return;
         }
 
         throw new UnsupportedOperationException("Consent type " + consentType + " is not supported yet");
     }
 
-    private void saveSinglePaymentConsent(PaymentConsentResponse response, BasePaymentRequestBody requestBody,
-            String bankId) {
+    private void saveSinglePaymentConsent(PaymentConsentResponse response, BasePaymentConsentApiRequest requestBody,
+            String clientId) {
         User user = userService.getCurrentUser();
-        BankEntity bank = bankService.getBankFromId(bankId);
+        BankEntity bank = bankService.getBankFromId(requestBody.getBank_id());
 
         SinglePaymentConsent consent = new SinglePaymentConsent();
-        consent.setConsent(encryptionService.encrypt(response.consent_id()));
+        String consentValue = Boolean.TRUE.equals(response.auto_approved()) ? response.consent_id() : response.request_id();
+        if (consentValue != null) {
+            consent.setConsent(encryptionService.encrypt(consentValue));
+        }
+        
         consent.setBank(bank);
         consent.setUser(user);
-        consent.setClientId(requestBody.getClient_id());
+        consent.setClientId(clientId);
         consent.setStatus(ConsentStatus.valueOf(response.status().toLowerCase(Locale.ROOT)));
         consent.setUsed(false);
         consent.setExpirationDate(Instant.parse(response.valid_until()));
 
-        if (requestBody instanceof SinglePaymentWithRecieverRequest withReceiver) {
-            consent.setCreditorAccount(withReceiver.getCreditor_account());
-            consent.setDebtorAccount(withReceiver.getDebtor_account());
-            consent.setAmount(withReceiver.getAmount());
-        } else if (requestBody instanceof SinglePaymentWithoutRecieverRequest withoutReceiver) {
-            consent.setDebtorAccount(withoutReceiver.getDebtor_account());
-            consent.setAmount(withoutReceiver.getAmount());
+        if (requestBody instanceof SinglePaymentConsentApiRequest single) {
+            consent.setCreditorAccount(single.getCreditor_account());
+            consent.setDebtorAccount(single.getDebtor_account());
+            consent.setAmount(single.getAmount());
+        } else {
+            throw new RuntimeException("Not a SinglePaymentConsentApiRequest: " + response.consent_type());
         }
 
         singlePaymentConsentRepository.save(consent);
+    }
+
+    public String checkPaymentConsentState(String bankId, String requestId) {
+        return requestId;
     }
 
     public String checkConsentState(String bankId, String requestId) {

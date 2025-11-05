@@ -8,9 +8,9 @@ import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-public class IntrabankPayment {
+public class BankPaymentRequest {
 
-    public IntrabankPayment(BigDecimal amount, String currency, String debtorAccount, String creditorAccount) {
+    public BankPaymentRequest(BigDecimal amount, String currency, String debtorAccount, String creditorAccount) {
         this.data = new DataClass(new Initiation(new Amount(amount.toString(), currency), new Account("RU.CBR.PAN", debtorAccount),
                 new CreditorAccount("RU.CBR.PAN", creditorAccount)));
     }

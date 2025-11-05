@@ -1,6 +1,8 @@
 package com.example.pbanking.repository;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -15,6 +17,7 @@ public interface CredentialsRepository extends JpaRepository<Credentials, Long> 
 
     interface BankClientPair {
         String getBankId();
+
         String getClientId();
     }
 
@@ -33,4 +36,10 @@ public interface CredentialsRepository extends JpaRepository<Credentials, Long> 
             order by c.bank.bankId, c.clientId
             """)
     List<BankClientPair> findAllBankClientPairs();
+
+    @Query(value = """
+            select c.client_id from credentials c
+            where c.user_id = :userId and c.bank_id = :bankId limit 1
+            """, nativeQuery = true)
+    Optional<String> findClientIdByUserAndBank(@Param("userId") UUID userId, @Param("bankId") String bankId);
 }
