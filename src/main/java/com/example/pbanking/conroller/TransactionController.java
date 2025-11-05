@@ -22,8 +22,8 @@ public class TransactionController {
     
     @PostMapping("/setType")
     @Secured("ROLE_PREMIUM")
-    public ResponseEntity postMethodName(@RequestBody UpdateTypeRequest request) {
-        transactionService.setTypeForTransaction(request.transaction_id(), request.type());
+    public ResponseEntity<Void> postMethodName(@RequestBody UpdateTypeRequest request) {
+        transactionService.setTypeForTransaction(request.id(), request.type());
         return ResponseEntity.status(200).body(null);    
     }
     

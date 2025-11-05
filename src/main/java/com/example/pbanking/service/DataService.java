@@ -125,7 +125,7 @@ public class DataService {
         List<BankClientLink> list = userService.getAllBankClientLinks();
         for (var pair : list) {
             for (var account : accountService.getAccounts(pair.bankId(), pair.clientId())) {
-                TransactionsResponse response = transactionService.getTransactions(pair.bankId(), account.accountId(), queryMap);
+                TransactionsResponse response = transactionService.getTransactions(pair.bankId(), account.getAccountId(), queryMap);
                 if (response == null) {
                     continue;
                 }

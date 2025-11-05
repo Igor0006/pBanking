@@ -43,9 +43,8 @@ public class UserController {
     }
     
     @PostMapping("/activatePremium/{days}")
-    public ResponseEntity postMethodName(@PathVariable int days) {
+    public ResponseEntity<Void> postMethodName(@PathVariable int days) {
         userService.setStatus(UserStatus.PREMIUM, days);
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(null);
     }
-    
 }

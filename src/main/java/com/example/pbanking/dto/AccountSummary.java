@@ -5,18 +5,43 @@ import java.time.LocalDate;
 import java.util.List;
 
 import com.example.pbanking.dto.response.AccountsResponse;
+import com.example.pbanking.model.enums.PurposeType;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-/**
- * View model for returning account details enriched with balance.
- */
-public record AccountSummary(
-        String accountId,
-        String status,
-        String currency,
-        String accountSubType,
-        String nickname,
-        LocalDate openingDate,
-        @JsonProperty("account") List<AccountsResponse.AccountReference> account,
-        BigDecimal amount) {
+@Data
+@NoArgsConstructor
+public class AccountSummary {
+
+    private String accountId;
+    private String status;
+    private String currency;
+    private String accountSubType;
+    private String nickname;
+    private LocalDate openingDate;
+
+    @JsonProperty("account")
+    private List<AccountsResponse.AccountReference> account;
+
+    private BigDecimal amount;
+
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private PurposeType purposeType = PurposeType.NONE;
+    
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private String description = null;
+
+    public AccountSummary(String accountId, String status, String currency, String accountSubType,
+                          String nickname, LocalDate openingDate,
+                          List<AccountsResponse.AccountReference> account, BigDecimal amount) {
+        this.accountId = accountId;
+        this.status = status;
+        this.currency = currency;
+        this.accountSubType = accountSubType;
+        this.nickname = nickname;
+        this.openingDate = openingDate;
+        this.account = account;
+        this.amount = amount;
+    }
 }

@@ -20,4 +20,6 @@ public class Account {
     
     @Enumerated(EnumType.STRING)
     private PurposeType type;
+    
+    private String description;
 }

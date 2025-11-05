@@ -1,7 +1,6 @@
 package com.example.pbanking.conroller;
 
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.HttpStatus;
@@ -14,8 +13,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.pbanking.dto.AccountSummary;
-import com.example.pbanking.service.AccountService;
 import com.example.pbanking.service.DataService;
 import com.example.pbanking.service.TransactionService;
 
@@ -30,12 +27,6 @@ import com.example.pbanking.dto.response.TransactionsResponse;
 public class InformationController {
     private final DataService dataService;
     private final TransactionService transactionService;
-    private final AccountService accountService;
-    
-    @GetMapping("/accounts/{bank_id}/{client_id}")
-    public ResponseEntity<List<AccountSummary>> getUserBankAccounts(@PathVariable String bank_id, @PathVariable String client_id) {
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(accountService.getAccounts(bank_id, client_id));
-    }
     
     @GetMapping("/transactions/{bank_id}/{account_id}")
     public ResponseEntity<TransactionsResponse> getMethodName(@PathVariable String bank_id, @PathVariable String account_id, @RequestParam(required = false) String from_booking_date_time,
