@@ -17,7 +17,7 @@ import lombok.Data;
     @JsonSubTypes.Type(value = SinglePaymentWithReceiverRequest.class, name = "single_use")
 
 })
-public abstract class BasePaymentRequestBody {
+public abstract class BasePaymentConsentRequestBody {
     protected String requesting_bank;
     
     protected String client_id;

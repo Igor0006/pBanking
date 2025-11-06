@@ -1,4 +1,4 @@
-package com.example.pbanking.dto;
+package com.example.pbanking.dto.request;
 
 import java.math.BigDecimal;
 
@@ -10,9 +10,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class BankPaymentRequest {
 
-    public BankPaymentRequest(BigDecimal amount, String currency, String debtorAccount, String creditorAccount) {
-        this.data = new DataClass(new Initiation(new Amount(amount.toString(), currency), new Account("RU.CBR.PAN", debtorAccount),
-                new CreditorAccount("RU.CBR.PAN", creditorAccount)));
+    public BankPaymentRequest(BigDecimal amount, String currency, String debtorAccount, String creditorAccount, String debtorScheme, String creditorScheme) {
+        this.data = new DataClass(new Initiation(new Amount(amount.toString(), currency), new Account(debtorScheme, debtorAccount),
+                new CreditorAccount(creditorScheme, creditorAccount)));
     }
 
     private DataClass data;

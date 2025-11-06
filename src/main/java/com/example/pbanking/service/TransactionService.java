@@ -29,7 +29,7 @@ public class TransactionService {
     private final ClassifierService classifierService;
         
     public TransactionsResponse getTransactions(String bankId, String accountId, Map<String, String> queryMap) {
-        var headersMap = Map.of("x-consent-id", consentService.getConsentForBank(bankId, ConsentType.READ),
+        var headersMap = Map.of("x-consent-id", consentService.getConsentForBank(bankId, ConsentType.READ, null),
                 "x-requesting-bank", props.getRequestingBankId());
         String path = ACCOUNTS_PATH + "/" + accountId + TRANSACTIONS_PATH;
         var response =  wc.get(bankId, path, queryMap, headersMap, tokenService.getBankToken(bankId),

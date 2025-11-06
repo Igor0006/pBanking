@@ -17,7 +17,7 @@ import lombok.Getter;
 
 
 @Getter
-public class SinglePaymentWithReceiverRequest extends BasePaymentRequestBody{
+public class SinglePaymentWithReceiverRequest extends BasePaymentConsentRequestBody{
 
     private String creditor_account;
     private String creditor_name;
