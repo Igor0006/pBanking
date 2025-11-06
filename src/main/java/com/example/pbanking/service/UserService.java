@@ -62,8 +62,8 @@ public class UserService {
     }
     
     public UserInformation getUserInfo() {
-        var currentUser = getCurrentUser();
-        return new UserInformation(getAllBankClientLinks(), currentUser.getStatus(), currentUser.getStatusExpireDate());
+        var u = getCurrentUser();
+        return new UserInformation(getAllBankClientLinks(), u.getStatus(), u.getStatusExpireDate(), u.getName(), u.getSurname(), u.getUsername());
     }
 
     public List<BankClientLink> getAllBankClientLinks() {
@@ -81,5 +81,12 @@ public class UserService {
         else {
             u.setStatusExpireDate(null);
         }
+    }
+    
+    @Transactional
+    public void setNameAndSurname(String name, String surname) {
+        User u = getCurrentUser();
+        u.setName(name);
+        u.setSurname(surname);
     }
 }

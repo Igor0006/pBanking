@@ -10,6 +10,8 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.annotation.Nonnull;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -41,6 +43,11 @@ public class User {
     @Nonnull
     private String password;
     
+    private String name = null;
+    
+    private String surname = null;
+    
+    @Enumerated(EnumType.STRING)
     private UserStatus status = UserStatus.DEFAULT;
     
     private Instant statusExpireDate = null;
