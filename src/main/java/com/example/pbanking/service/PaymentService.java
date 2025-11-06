@@ -1,18 +1,20 @@
 package com.example.pbanking.service;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
-import com.example.pbanking.dto.BankPaymentRequest;
+import com.example.pbanking.dto.request.BankPaymentRequest;
 import com.example.pbanking.dto.request.MakeSinglePaymentRequest;
-import com.example.pbanking.dto.request.SinglePaymentWithReceiverRequest;
 import com.example.pbanking.dto.response.MakePaymentResponse;
 import com.example.pbanking.exception.NotFoundException;
 import com.example.pbanking.model.User;
 import com.example.pbanking.model.enums.ConsentType;
 import com.example.pbanking.repository.CredentialsRepository;
+import com.example.pbanking.repository.MultiPaymentConsentRepository;
+import com.example.pbanking.repository.SinglePaymentConsentRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -24,45 +26,61 @@ public class PaymentService {
     private final AccountService accountService;
     private final UserService userService;
     private final CredentialsRepository credentialsRepository;
+    private final SinglePaymentConsentRepository singlePaymentConsentRepository;
+    private final MultiPaymentConsentRepository multiPaymentConsentRepository;
     private final WebClientExecutor wc;
     private static final String PAYMENT_PATH = "/payments";
 
     public MakePaymentResponse makeSinglePayment(MakeSinglePaymentRequest request) {
         User user = userService.getCurrentUser();
 
-        String clientId = credentialsRepository.findClientIdByUserAndBank(user.getId(), request.debtor_bank())
-                .orElseThrow(() -> new NotFoundException(
-                        "No client id for user: " + user.getUsername() + " and bank: " + request.debtor_bank()));
-
         checkBalance(request);
 
-        BankPaymentRequest bankRequestBody = new BankPaymentRequest(request.amount(), request.currency(),
-                request.debtor_account(),
-                request.creditor_account());
-
-        if (request.creditor_bank().isPresent()) {
-            bankRequestBody.setCreditorBank(request.creditor_bank().get());
-        }
-
         String consent;
+        HashMap<String, String> kwargs = new HashMap<String, String>(Map.of("debtorAccount", request.debtor_account(),
+                "creditorAccount", request.creditor_account(),
+                "amount", request.amount().toString()));
+
         try {
-            consent = consentService.getConsentForBank(request.debtor_bank(), ConsentType.SINGLE_USE);
+            consent = consentService.getConsentForBank(request.debtor_bank(), ConsentType.SINGLE_USE, kwargs);
         } catch (NotFoundException e) {
-            // поиск multi use consent
-            throw new RuntimeException("fsdfsd");
+            return useMultiUseConsent(user, request);
         }
 
+        String clientId = getClientId(user, request);
+        BankPaymentRequest bankRequestBody = getBankPaymentRequest(request);
+        MakePaymentResponse response = sendPaymentRequest(request, consent, bankRequestBody, clientId);
+
+        singlePaymentConsentRepository.markAsUsed(user, request.debtor_account(), request.creditor_account(),
+                request.amount());
+        return response;
+    }
+
+    // TODO: проверка данных
+    public MakePaymentResponse useMultiUseConsent(User user, MakeSinglePaymentRequest request) {
+        HashMap<String, String> kwargs = new HashMap<String, String>(Map.of(
+                "debtorAccount", request.debtor_account(),
+                "amount", request.amount().toString()));
+
+        String consent = consentService.getConsentForBank(request.debtor_bank(), ConsentType.MULTI_USE, kwargs);
+        String clientId = getClientId(user, request);
+        BankPaymentRequest bankRequestBody = getBankPaymentRequest(request);
+
+        MakePaymentResponse response = sendPaymentRequest(request, consent, bankRequestBody, clientId);
+        multiPaymentConsentRepository.markUsage(user, request.debtor_account(), request.amount());
+
+        return response;
+    }
+
+    private MakePaymentResponse sendPaymentRequest(MakeSinglePaymentRequest request, String consent,
+            BankPaymentRequest bankRequestBody, String clientId) {
         var headersMap = Map.of("x-payment-consent-id", consent);
 
         var queryMap = Map.of("client_id", clientId);
 
-        MakePaymentResponse response = wc.post(request.debtor_bank(), PAYMENT_PATH, bankRequestBody, queryMap,
+        return wc.post(request.debtor_bank(), PAYMENT_PATH, bankRequestBody, queryMap,
                 headersMap,
                 tokenService.getBankToken(request.debtor_bank()), MakePaymentResponse.class);
-
-        return response;
-        // return getPaymentStatus(request.requesting_bank(),
-        // response.data().paymentId(), clientId);
     }
 
     private void checkBalance(MakeSinglePaymentRequest request) {
@@ -70,6 +88,26 @@ public class PaymentService {
         if (request.amount().compareTo(balance) >= 1) {
             throw new RuntimeException("Insufficient funds on the balance sheet");
         }
+    }
+
+    private BankPaymentRequest getBankPaymentRequest(MakeSinglePaymentRequest request) {
+        BankPaymentRequest bankRequestBody = new BankPaymentRequest(request.amount(), request.currency(),
+                request.debtor_account(),
+                request.creditor_account(), request.debtor_scheme(), request.creditor_scheme());
+
+        if (request.creditor_bank().isPresent()) {
+            bankRequestBody.setCreditorBank(request.creditor_bank().get());
+        }
+
+        return bankRequestBody;
+    }
+
+    private String getClientId(User user, MakeSinglePaymentRequest request) {
+        String clientId = credentialsRepository.findClientIdByUserAndBank(user.getId(), request.debtor_bank())
+                .orElseThrow(() -> new NotFoundException(
+                        "No client id for user: " + user.getUsername() + " and bank: " + request.debtor_bank()));
+
+        return clientId;
     }
 
     // private PaymentStatus getPaymentStatus(String bankId, String paymentId,

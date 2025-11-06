@@ -27,7 +27,7 @@ public class AccountService {
     public List<AccountSummary> getAccounts(String bankId, String clientId) {
         var headersMap = Map.of(
                 "x-requesting-bank", props.getRequestingBankId(),
-                "x-consent-id", consentService.getConsentForBank(bankId, ConsentType.READ));
+                "x-consent-id", consentService.getConsentForBank(bankId, ConsentType.READ, null));
         var queryMap = Map.of("client_id", clientId);
         var response = wc.get(bankId, ACCOUNTS_PATH, queryMap, headersMap,
                 tokenService.getBankToken(bankId), AccountsResponse.class);
@@ -42,7 +42,7 @@ public class AccountService {
     public BigDecimal getAccountBalance(String bankId, String accountId) {
         var headersMap = Map.of(
                 "x-requesting-bank", props.getRequestingBankId(),
-                "x-consent-id", consentService.getConsentForBank(bankId, ConsentType.READ));
+                "x-consent-id", consentService.getConsentForBank(bankId, ConsentType.READ, null));
         String path = ACCOUNTS_PATH + "/" + accountId + "/balances";
         var response = wc.get(bankId, path, null, headersMap,
                 tokenService.getBankToken(bankId), BalanceResponse.class);
