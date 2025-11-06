@@ -31,7 +31,7 @@ public class InformationController {
     @GetMapping("/transactions/{bank_id}/{account_id}")
     public ResponseEntity<TransactionsResponse> getMethodName(@PathVariable String bank_id, @PathVariable String account_id, @RequestParam(required = false) String from_booking_date_time,
                                 @RequestParam(required = false) String to_booking_date_time, @RequestParam(defaultValue = "1") String page, 
-                                @RequestParam(defaultValue = "50") String limit, Authentication auth) {
+                                @RequestParam(defaultValue = "50") String limit, @RequestParam(defaultValue = "fasle") Boolean predict, Authentication auth) {
         
         Map<String, String> queryMap = Map.of("page", page, "limit", limit);
         if (from_booking_date_time != null) queryMap.put("from_booking_date_time", from_booking_date_time);
@@ -39,7 +39,7 @@ public class InformationController {
         var roles = AuthorityUtils.authorityListToSet(auth.getAuthorities());
         if (roles.contains("ROLE_PREMIUM")) {
             return ResponseEntity.status(HttpStatus.ACCEPTED).body(
-                    transactionService.getTransactionsPrime(bank_id, account_id, queryMap));
+                    transactionService.getTransactionsPrime(bank_id, account_id, queryMap, predict));
         }
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(
                 transactionService.getTransactions(bank_id, account_id, queryMap));
@@ -56,6 +56,5 @@ public class InformationController {
     @GetMapping("/statistic")
     public ResponseEntity<StatisticReposnse> getStats(@RequestParam(required = false) PurposeType type) {
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(dataService.getStatistic(type));
-    }
-    
+    }    
 }

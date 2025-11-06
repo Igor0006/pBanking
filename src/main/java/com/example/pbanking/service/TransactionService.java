@@ -10,6 +10,7 @@ import com.example.pbanking.model.enums.ConsentType;
 import com.example.pbanking.model.enums.PurposeType;
 import com.example.pbanking.repository.AccountRepository;
 import com.example.pbanking.repository.TransactionRepository;
+
 import com.example.pbanking.exception.BadRequestException;
 import lombok.RequiredArgsConstructor;
 
@@ -25,21 +26,21 @@ public class TransactionService {
     private final AccountRepository accountRepository;
     private final BankTokenService tokenService;
     private final WebClientExecutor wc;
-
-    
+    private final ClassifierService classifierService;
+        
     public TransactionsResponse getTransactions(String bankId, String accountId, Map<String, String> queryMap) {
         var headersMap = Map.of("x-consent-id", consentService.getConsentForBank(bankId, ConsentType.READ),
                 "x-requesting-bank", props.getRequestingBankId());
         String path = ACCOUNTS_PATH + "/" + accountId + TRANSACTIONS_PATH;
-        return wc.get(bankId, path, queryMap, headersMap, tokenService.getBankToken(bankId),
+        var response =  wc.get(bankId, path, queryMap, headersMap, tokenService.getBankToken(bankId),
                 TransactionsResponse.class);
+        return response;
     }
     
-    public TransactionsResponse getTransactionsPrime(String bank_id, String account_id, Map<String, String> queryMap) {
+    public TransactionsResponse getTransactionsPrime(String bank_id, String account_id, Map<String, String> queryMap, boolean predict) {
         var response = getTransactions(bank_id, account_id, queryMap);
         for (var transaction : response.transactions()) {
-            var currentType = transaction.getType();
-            if (currentType != null && currentType != PurposeType.NONE) {
+            if (transaction.getType() != null && transaction.getType() != PurposeType.NONE) {
                 continue;
             }
 
@@ -61,10 +62,18 @@ public class TransactionService {
                     transaction.setType(account.get().getType());
                 }
             }
+            if (transaction.getType() != null && transaction.getType() != PurposeType.NONE) {
+                continue;
+            }
+            if (predict) {
+                var type = classifierService.predictType(transaction);
+                setTypeForTransaction(transaction.getTransactionId(), type);
+                transaction.setType(type);
+            }
         }
         return response;
     }
-
+    
     public void setTypeForTransaction(String transactionId, PurposeType type) {
         if (transactionId == null || transactionId.isBlank()) {
             throw new BadRequestException("Transaction id must not be empty");
