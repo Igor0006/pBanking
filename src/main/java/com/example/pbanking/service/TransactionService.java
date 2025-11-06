@@ -10,7 +10,7 @@ import com.example.pbanking.model.enums.ConsentType;
 import com.example.pbanking.model.enums.PurposeType;
 import com.example.pbanking.repository.AccountRepository;
 import com.example.pbanking.repository.TransactionRepository;
-
+import com.example.pbanking.exception.BadRequestException;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -38,34 +38,48 @@ public class TransactionService {
     public TransactionsResponse getTransactionsPrime(String bank_id, String account_id, Map<String, String> queryMap) {
         var response = getTransactions(bank_id, account_id, queryMap);
         for (var transaction : response.transactions()) {
-            boolean typeAssigned = false;
+            var currentType = transaction.getType();
+            if (currentType != null && currentType != PurposeType.NONE) {
+                continue;
+            }
+
+            boolean typeAssigned = transactionRepository.findTypeByTransactionId(transaction.getTransactionId())
+                    .map(type -> {
+                        transaction.setType(type);
+                        return true;
+                    })
+                    .orElse(false);
+
+            if (typeAssigned) {
+                continue;
+            }
+
             var transactionAccountId = transaction.getAccountId();
             if (transactionAccountId != null && !transactionAccountId.isBlank()) {
                 var account = accountRepository.findByAccountIdAndBankId(transactionAccountId, bank_id);
                 if (account.isPresent() && account.get().getType() != null) {
                     transaction.setType(account.get().getType());
-                    typeAssigned = true;
                 }
-            }
-
-            if (!typeAssigned) {
-                transactionRepository.findTypeByTransactionId(transaction.getTransactionId())
-                        .ifPresent(transaction::setType);
             }
         }
         return response;
     }
 
-    public void setTypeForTransaction(String transaction_id, PurposeType type) {
-        var transaction = transactionRepository.findByTransactionId(transaction_id)
+    public void setTypeForTransaction(String transactionId, PurposeType type) {
+        if (transactionId == null || transactionId.isBlank()) {
+            throw new BadRequestException("Transaction id must not be empty");
+        }
+
+        var transaction = transactionRepository.findByTransactionId(transactionId)
                 .orElseGet(() -> {
                     var newTransaction = new com.example.pbanking.model.Transaction();
-                    newTransaction.setTransactionId(transaction_id);
+                    newTransaction.setTransactionId(transactionId);
                     
                     return newTransaction;
                 });
 
         transaction.setType(type);
+        transaction.setTransactionId(transactionId);
         transactionRepository.save(transaction);
     }
 }

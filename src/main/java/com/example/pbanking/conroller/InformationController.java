@@ -13,13 +13,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.pbanking.dto.response.StatisticReposnse;
+import com.example.pbanking.dto.response.TransactionsResponse;
+import com.example.pbanking.model.enums.PurposeType;
 import com.example.pbanking.service.DataService;
 import com.example.pbanking.service.TransactionService;
 
 import lombok.RequiredArgsConstructor;
-
-import com.example.pbanking.dto.response.StatisticReposnse;
-import com.example.pbanking.dto.response.TransactionsResponse;
 
 @RestController
 @RequiredArgsConstructor
@@ -54,8 +54,8 @@ public class InformationController {
     }
     
     @GetMapping("/statistic")
-    public ResponseEntity<StatisticReposnse> getStats() {
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(dataService.getStatistic());
+    public ResponseEntity<StatisticReposnse> getStats(@RequestParam(required = false) PurposeType type) {
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(dataService.getStatistic(type));
     }
     
 }
