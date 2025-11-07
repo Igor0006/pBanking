@@ -7,7 +7,6 @@ COPY .mvn .mvn
 RUN ./mvnw dependency:go-offline
 
 COPY src src
-COPY scripts scripts
 
 RUN ./mvnw -DskipTests package
 
