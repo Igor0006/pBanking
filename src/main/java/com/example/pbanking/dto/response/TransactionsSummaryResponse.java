@@ -48,6 +48,7 @@ public class TransactionsSummaryResponse {
         private OffsetDateTime bookingDateTime;
         private OffsetDateTime valueDateTime;
         private String transactionInformation;
+        private String code;
         private Card card;
 
         public static TransactionDto from(TransactionsResponse.Transaction transaction) {
@@ -65,8 +66,26 @@ public class TransactionsSummaryResponse {
             dto.setBookingDateTime(transaction.getBookingDateTime());
             dto.setValueDateTime(transaction.getValueDateTime());
             dto.setTransactionInformation(transaction.getTransactionInformation());
+            dto.setCode(mapTransactionCode(transaction.getBankTransactionCode()));
             dto.setCard(Card.from(transaction.getCard()));
             return dto;
+        }
+
+        private static String mapTransactionCode(TransactionsResponse.BankTransactionCode source) {
+            if (source == null || source.getCode() == null) {
+                return null;
+            }
+            String raw = source.getCode().trim();
+            if (raw.isEmpty()) {
+                return null;
+            }
+            if ("01".equals(raw) || "issued".equalsIgnoreCase(raw)) {
+                return "issued";
+            }
+            if ("02".equals(raw) || "received".equalsIgnoreCase(raw)) {
+                return "received";
+            }
+            return raw;
         }
     }
 

@@ -224,20 +224,33 @@ public class DataService {
             return null;
         }
 
-        var bankTransactionCode = transaction.getBankTransactionCode();
-        String code = bankTransactionCode == null ? null : bankTransactionCode.getCode();
         var indicator = transaction.getCreditDebitIndicator();
-
         boolean isDebit = indicator == TransactionsResponse.CreditDebitIndicator.DEBIT;
 
         if (isDebit) {
-            if (code == null || !code.contains("Issued")) {
+            var bankTransactionCode = transaction.getBankTransactionCode();
+            String code = bankTransactionCode == null ? null : bankTransactionCode.getCode();
+            if (!isIssuedCode(code)) {
                 return null;
             }
             return amount.getAmount();
         }
 
         return null;
+    }
+
+    private boolean isIssuedCode(String code) {
+        if (code == null) {
+            return false;
+        }
+        String normalized = code.trim();
+        if (normalized.isEmpty()) {
+            return false;
+        }
+        if ("01".equals(normalized)) {
+            return true;
+        }
+        return "issued".equalsIgnoreCase(normalized);
     }
 
     private PurposeType normalizeType(PurposeType type) {
