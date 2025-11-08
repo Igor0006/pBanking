@@ -31,6 +31,12 @@ public class User {
         this.username = username;
         this.password = password;
     }
+    
+    public User(String username, String password, UserStatus status) {
+        this.username = username;
+        this.password = password;
+        this.status = status;
+    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

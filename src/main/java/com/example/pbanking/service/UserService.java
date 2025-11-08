@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -18,19 +19,42 @@ import com.example.pbanking.model.User;
 import com.example.pbanking.model.enums.UserStatus;
 import com.example.pbanking.repository.CredentialsRepository;
 
+import jakarta.annotation.PostConstruct;
 import jakarta.transaction.Transactional;
 
 import com.example.pbanking.repository.UserRepository;
 
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
     private final CredentialsRepository credentialsRepository;
     private final JWTService jwtService;
     private final EncryptionService encryptionService;
+    @Value("${secret.team_secret}")
+    private String teamSecret;
+    
+    @PostConstruct
+    public void initAdmin() {
+        userRepository.findByUsername("admin")
+                .ifPresentOrElse(user -> {
+                    boolean requiresUpdate = user.getStatus() != UserStatus.ADMIN;
+                    String encodedSecret = encryptionService.encodePassword(teamSecret);
+                    if (!encryptionService.isValidPassword(teamSecret, user.getPassword())) {
+                        user.setPassword(encodedSecret);
+                        requiresUpdate = true;
+                    }
+                    if (requiresUpdate) {
+                        user.setStatus(UserStatus.ADMIN);
+                        userRepository.save(user);
+                    }
+                }, () -> {
+                    User admin = new User("admin", encryptionService.encodePassword(teamSecret), UserStatus.ADMIN);
+                    userRepository.save(admin);
+                });
+    }
 
     public User getCurrentUser() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();

@@ -21,6 +21,7 @@ public class BankEntity {
     @Id
     private String bankId;
     private String name;
+    private String url;
 
     @Column(columnDefinition = "TEXT")
     private String token;
@@ -30,9 +31,10 @@ public class BankEntity {
     @JsonManagedReference
     private List<Credentials> consents;
 
-    public BankEntity(String bankId, String bankName) {
+    public BankEntity(String bankId, String bankName, String bankUrl) {
         this.bankId = bankId;
         this.name = bankName;
+        this.url = bankUrl;
     }
 
     public void setToken(String token) {
@@ -41,5 +43,9 @@ public class BankEntity {
 
     public void setExpiresAt(Instant expiresAt) {
         this.expiresAt = expiresAt;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
     }
 }
