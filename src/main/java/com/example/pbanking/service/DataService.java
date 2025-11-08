@@ -210,7 +210,12 @@ public class DataService {
     }
 
     private BigDecimal extractExpenseAmount(TransactionsResponse.Transaction transaction) {
-        if (transaction == null || transaction.getStatus() != TransactionStatus.BOOKED) {
+        if (transaction == null) {
+            return null;
+        }
+
+        var status = transaction.getStatus();
+        if (status == null || !status.isSettled()) {
             return null;
         }
 

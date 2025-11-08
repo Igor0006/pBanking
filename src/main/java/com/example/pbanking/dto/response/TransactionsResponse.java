@@ -17,6 +17,7 @@ import java.util.List;
 @AllArgsConstructor
 public class TransactionsResponse {
     private TxData data;
+    private Links links;
     private Meta meta;
 
     public List<Transaction> transactions() {
@@ -64,6 +65,10 @@ public class TransactionsResponse {
         private OffsetDateTime valueDateTime;
         private String transactionInformation;
         private BankTransactionCode bankTransactionCode;
+        private Merchant merchant;
+        private TransactionLocation transactionLocation;
+        private Card card;
+        private Counterparty counterparty;
     }
 
     @Data
@@ -79,6 +84,47 @@ public class TransactionsResponse {
     @AllArgsConstructor
     public static class BankTransactionCode {
         private String code;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class Merchant {
+        private String merchantId;
+        private String name;
+        private String mccCode;
+        private String category;
+        private String city;
+        private String country;
+        private String address;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class TransactionLocation {
+        private String city;
+        private String country;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class Card {
+        private String cardId;
+        private String cardNumber;
+        private String cardType;
+        private String cardName;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class Counterparty {
+        private String counterpartyId;
+        private String name;
+        private String accountId;
+        private String bankId;
     }
 
     public enum CreditDebitIndicator {
@@ -98,12 +144,16 @@ public class TransactionsResponse {
     }
 
     public enum TransactionStatus {
-        BOOKED, PENDING, REJECTED;
+        BOOKED, COMPLETED, PENDING, REJECTED;
 
         @JsonCreator
         public static TransactionStatus from(String v) {
             if (v == null) return null;
             return TransactionStatus.valueOf(v.trim().toUpperCase());
+        }
+
+        public boolean isSettled() {
+            return this == BOOKED || this == COMPLETED;
         }
 
         @JsonValue
