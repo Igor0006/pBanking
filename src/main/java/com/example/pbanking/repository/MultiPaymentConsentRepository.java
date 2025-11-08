@@ -1,6 +1,7 @@
 package com.example.pbanking.repository;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -17,10 +18,10 @@ public interface MultiPaymentConsentRepository extends JpaRepository<MultiPaymen
     @Query("""
             select c from MultiPaymentConsent c where c.user = :user and
             c.debtorAccount = :debtorAccount and c.maxUses > 0 and c.maxAmountPerPayment >= :amount
-            and c.maxTotalAmount >= :amount order by c.id limit 1
+            and c.maxTotalAmount >= :amount and c.expirationDate > :currentTime order by c.id limit 1
             """)
     Optional<MultiPaymentConsent> findAppropriateConsent(@Param("user") User user,
-            @Param("debtorAccount") String debtorAccount, @Param("amount") BigDecimal amount);
+            @Param("debtorAccount") String debtorAccount, @Param("amount") BigDecimal amount, @Param("currentTime") Instant currentTime);
 
     @Modifying
     @Transactional

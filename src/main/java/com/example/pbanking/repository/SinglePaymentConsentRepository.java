@@ -1,6 +1,7 @@
 package com.example.pbanking.repository;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -27,18 +28,18 @@ public interface SinglePaymentConsentRepository extends JpaRepository<SinglePaym
     @Query("""
             select c from SinglePaymentConsent c where
             c.user = :user and c.debtorAccount = :debtorAccount and
-            c.creditorAccount = :creditorAccount and c.amount <= :amount and c.isUsed = false
+            c.creditorAccount = :creditorAccount and c.amount >= :amount and c.isUsed = false and c.expirationDate > :currentTime
             """)
     Optional<SinglePaymentConsent> findAppropriateConsent(@Param("user") User user,
             @Param("debtorAccount") String debtorAccount,
-            @Param("creditorAccount") String creditorAccount, @Param("amount") BigDecimal amount);
+            @Param("creditorAccount") String creditorAccount, @Param("amount") BigDecimal amount, @Param("currentTime") Instant currentTime);
 
     Optional<SinglePaymentConsent> findByUserAndBank(User user, BankEntity bank);
 
     @Query("""
         update SinglePaymentConsent c set c.isUsed = true where
         c.user = :user and c.debtorAccount = :debtorAccount and
-        c.creditorAccount = :creditorAccount and c.amount <= :amount and c.isUsed = false
+        c.creditorAccount = :creditorAccount and c.amount >= :amount and c.isUsed = false
         """)
     @Modifying
     @Transactional
