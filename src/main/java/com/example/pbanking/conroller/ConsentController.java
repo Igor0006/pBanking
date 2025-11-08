@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.pbanking.dto.request.MultiPaymentConsetApiRequest;
-import com.example.pbanking.dto.request.ProductConsentApiRequest;
 import com.example.pbanking.dto.request.SinglePaymentConsentApiRequest;
 import com.example.pbanking.dto.response.AccountConsentResponse;
 import com.example.pbanking.model.enums.ConsentType;

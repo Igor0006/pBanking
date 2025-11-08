@@ -17,7 +17,7 @@ import lombok.RequiredArgsConstructor;
 public class PaymentController {
     private final PaymentService paymentService;
 
-    @PostMapping("/single")
+    @PostMapping()
     public ResponseEntity<String> makePayment(@RequestBody MakeSinglePaymentRequest request) {
         paymentService.makeSinglePayment(request);
         return ResponseEntity.ok().body("Payment created");
