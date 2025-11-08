@@ -4,5 +4,8 @@ public enum ConsentType {
     READ,
     SINGLE_USE,
     MULTI_USE,
-    VRP 
+    VRP,
+    PRODUCT_READ,
+    PRODUCT_OPEN,
+    PRODUCT_CLOSE
 }
