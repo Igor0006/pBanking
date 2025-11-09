@@ -39,6 +39,7 @@ public class TransactionsSummaryResponse {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class TransactionDto {
+        private String bankId;
         private String accountId;
         private String transactionId;
         private PurposeType type = PurposeType.NONE;
@@ -57,6 +58,7 @@ public class TransactionsSummaryResponse {
             }
 
             TransactionDto dto = new TransactionDto();
+            dto.setBankId(transaction.getBankId());
             dto.setAccountId(transaction.getAccountId());
             dto.setTransactionId(transaction.getTransactionId());
             dto.setType(transaction.getType());

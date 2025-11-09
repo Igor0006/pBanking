@@ -34,6 +34,9 @@ public class TransactionService {
         String path = ACCOUNTS_PATH + "/" + accountId + TRANSACTIONS_PATH;
         var response =  wc.get(bankId, path, queryMap, headersMap, tokenService.getBankToken(bankId),
                 TransactionsResponse.class);
+        if (response != null) {
+            response.transactions().forEach(transaction -> transaction.setBankId(bankId));
+        }
         return response;
     }
     
