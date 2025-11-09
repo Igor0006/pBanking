@@ -67,7 +67,7 @@ public class PaymentService {
         BankPaymentRequest bankRequestBody = getBankPaymentRequest(request);
 
         MakePaymentResponse response = sendPaymentRequest(request, consent, bankRequestBody, clientId);
-        multiPaymentConsentRepository.markUsage(user, request.debtor_account(), request.amount());
+        multiPaymentConsentRepository.markUsage(request.debtor_account(), request.amount());
 
         return response;
     }
@@ -93,7 +93,7 @@ public class PaymentService {
     private BankPaymentRequest getBankPaymentRequest(MakeSinglePaymentRequest request) {
         BankPaymentRequest bankRequestBody = new BankPaymentRequest(request.amount(), request.currency(),
                 request.debtor_account(),
-                request.creditor_account(), request.debtor_scheme(), request.creditor_scheme());
+                request.creditor_account(), request.debtor_scheme(), request.creditor_scheme(), request.comment());
 
         if (request.creditor_bank().isPresent()) {
             bankRequestBody.setCreditorBank(request.creditor_bank().get());

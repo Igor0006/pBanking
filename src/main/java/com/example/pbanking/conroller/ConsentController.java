@@ -44,10 +44,10 @@ public class ConsentController {
         return ResponseEntity.status(HttpStatus.CREATED).body("Consent created");
     }
 
-    // @PostMapping("/product")
-    // public ResponseEntity<String> getProductConsent(@RequestBody ProductConsentApiRequest request) {
-    //     consentService.getProductConsent(request);
-    //     return ResponseEntity.status(HttpStatus.CREATED).body("Consent created");
-    // }
+    @PostMapping("/product")
+    public ResponseEntity<String> getProductConsent(@RequestBody ProductConsentApiRequest request) {
+        consentService.getProductConsent(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body("Consent created");
+    }
 
 }

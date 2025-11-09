@@ -1,13 +1,11 @@
 package com.example.pbanking.dto.response;
 
-public record PaymentConsentResponse(
+public record ProductConsentResponse (
     String request_id,
     String consent_id,
     String status,
-    String consent_type,
     boolean auto_approved,
     String message,
     String valid_until
-) {
-    
-}
+) {}
+

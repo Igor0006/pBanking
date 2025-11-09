@@ -24,6 +24,7 @@ import com.example.pbanking.dto.request.SinglePaymentWithReceiverRequest;
 import com.example.pbanking.dto.response.AccountConsentResponse;
 import com.example.pbanking.dto.response.CheckAccountConsentResponse;
 import com.example.pbanking.dto.response.PaymentConsentResponse;
+import com.example.pbanking.dto.response.ProductConsentResponse;
 import com.example.pbanking.exception.NotFoundException;
 import com.example.pbanking.model.AccountConsent;
 import com.example.pbanking.model.BankEntity;
@@ -143,13 +144,13 @@ public class ConsentService {
                 requestBody.close_product_agreements(), requestBody.allowed_product_types(), requestBody.max_amount(),
                 requestBody.valid_until(), "Финансовый агрегатор для управления продуктами");
 
-        Object response = webClientExecutor.post(requestBody.bank_id(),
+        ProductConsentResponse response = webClientExecutor.post(requestBody.bank_id(),
                 PRODUCT_PATH,
                 bankRequest,
                 queryMap,
                 null,
                 tokenService.getBankToken(requestBody.bank_id()),
-                Object.class);
+                ProductConsentResponse.class);
 
         saveProductConsent(response, requestBody, clientId);
 
@@ -355,7 +356,7 @@ public class ConsentService {
                         new BigDecimal(kwargs.get("amount")),
                         Instant.now())
                 .orElseThrow(() -> new NotFoundException("Consent not found for debtor account: "
-                        + kwargs.get("debtorAccount") + " and creditor account: " + kwargs.get("creditorAccount")));
+                        + kwargs.get("debtorAccount")));
         return resolveMultiPaymentConsentValue(consent, bankId);
     }
 
@@ -381,20 +382,20 @@ public class ConsentService {
         }
     }
 
-    private void saveProductConsent(Object response, ProductConsentApiRequest requestBody, String clientId) {
+    private void saveProductConsent(ProductConsentResponse response, ProductConsentApiRequest requestBody, String clientId) {
         ProductConsent consent = new ProductConsent();
         User user = userService.getCurrentUser();
         BankEntity bank = bankService.getBankFromId(requestBody.bank_id());
 
         consent.setBank(bank);
         consent.setUser(user);
-        // String consentValue = Boolean.TRUE.equals(response.auto_approved()) ?
-        // response.consent_id()
-        // : response.request_id();
-        // if (consentValue != null) {
-        // consent.setConsent(encryptionService.encrypt(consentValue));
-        // }
-        // consent.setStatus(response.status());
+        String consentValue = Boolean.TRUE.equals(response.auto_approved()) ?
+        response.consent_id()
+        : response.request_id();
+        if (consentValue != null) {
+        consent.setConsent(encryptionService.encrypt(consentValue));
+        }
+        consent.setStatus(ConsentStatus.valueOf(response.status().toLowerCase(Locale.ROOT)));
         consent.setAllowedProductTypes(requestBody.allowed_product_types());
         consent.setReadProductAgreements(requestBody.read_product_agreements());
         consent.setOpenProductAgreements(requestBody.open_product_agreements());
