@@ -470,7 +470,7 @@ public class ConsentService {
                 path,
                 null,
                 headers,
-                null,
+                tokenService.getBankToken(bankId),
                 CheckAccountConsentResponse.class);
 
         CheckAccountConsentResponse.Data data = response.data();
