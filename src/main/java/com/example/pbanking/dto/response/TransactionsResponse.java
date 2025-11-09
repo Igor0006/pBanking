@@ -53,6 +53,7 @@ public class TransactionsResponse {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class Transaction {
+        private String bankId;
         private String accountId;
         private String transactionId;
 
