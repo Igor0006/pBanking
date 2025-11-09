@@ -1,14 +1,8 @@
 package com.example.pbanking.repository;
 
-import java.util.Optional;
-
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 
-import com.example.pbanking.model.BankEntity;
 import com.example.pbanking.model.ProductConsent;
-import com.example.pbanking.model.User;
 
 public interface ProductConsentRepository extends JpaRepository<ProductConsent, Long> {
 

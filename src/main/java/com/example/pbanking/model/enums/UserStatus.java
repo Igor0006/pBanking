@@ -1,5 +1,5 @@
 package com.example.pbanking.model.enums;
 
 public enum UserStatus {
-    PREMIUM, DEFAULT
+    PREMIUM, DEFAULT, ADMIN
 }

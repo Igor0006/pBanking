@@ -1,19 +1,20 @@
 package com.example.pbanking.conroller;
 
-import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.pbanking.dto.BankClientLink;
 import com.example.pbanking.dto.request.AuthUserRequest;
 import com.example.pbanking.dto.response.AuthResponse;
-import com.example.pbanking.repository.CredentialsRepository.BankClientPair;
+import com.example.pbanking.dto.response.UserInformation;
+import com.example.pbanking.model.enums.UserStatus;
 import com.example.pbanking.service.UserService;
 
 import lombok.AllArgsConstructor;
@@ -37,13 +38,22 @@ public class UserController {
         return ResponseEntity.ok().body(response);
     }
     
-    @GetMapping("/clientIds")
-    public ResponseEntity<List<BankClientPair>> getUsersClientIds() {
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(userService.getUserClientIds());
+    @GetMapping("/generalData")
+    public ResponseEntity<UserInformation> getMethodName() {
+        return ResponseEntity.status(201).body(userService.getUserInfo());
     }
     
-    @GetMapping("/bankClientLinks")
-    public ResponseEntity<List<BankClientLink>> getMethodName() {
-        return ResponseEntity.status(201).body(userService.getAllBankClientLinks());
+    @PostMapping("/activatePremium/{days}")
+    public ResponseEntity<Void> postMethodName(@PathVariable int days) {
+        userService.setStatus(UserStatus.PREMIUM, days);
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(null);
     }
+    
+    @PostMapping("/setNameSurname")
+    public ResponseEntity<Void> postMethodName(@RequestParam String name,
+                                               @RequestParam String surname) {
+        userService.setNameAndSurname(name, surname);    
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(null);
+    }
+    
 }

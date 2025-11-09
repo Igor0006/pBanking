@@ -14,7 +14,7 @@ import lombok.AllArgsConstructor;
 public class UserPrincipal implements UserDetails {
     private User user;
 
-    @Override
+   @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority("ROLE_" + user.getStatus()));
     }

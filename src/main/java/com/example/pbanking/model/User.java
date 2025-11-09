@@ -1,5 +1,6 @@
 package com.example.pbanking.model;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -9,6 +10,8 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.annotation.Nonnull;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -28,6 +31,12 @@ public class User {
         this.username = username;
         this.password = password;
     }
+    
+    public User(String username, String password, UserStatus status) {
+        this.username = username;
+        this.password = password;
+        this.status = status;
+    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -40,7 +49,14 @@ public class User {
     @Nonnull
     private String password;
     
+    private String name = null;
+    
+    private String surname = null;
+    
+    @Enumerated(EnumType.STRING)
     private UserStatus status = UserStatus.DEFAULT;
+    
+    private Instant statusExpireDate = null;
 
     @OneToMany(mappedBy = "user")
     @JsonManagedReference

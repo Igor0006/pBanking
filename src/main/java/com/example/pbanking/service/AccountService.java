@@ -11,6 +11,8 @@ import com.example.pbanking.dto.AccountSummary;
 import com.example.pbanking.dto.response.AccountsResponse;
 import com.example.pbanking.dto.response.BalanceResponse;
 import com.example.pbanking.model.enums.ConsentType;
+import com.example.pbanking.model.enums.PurposeType;
+import com.example.pbanking.repository.AccountRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -20,6 +22,7 @@ public class AccountService {
     private final WebClientExecutor wc;
     private final BankTokenService tokenService;
     private final ConsentService consentService;
+    private final AccountRepository accountRepository;
     private final TPPConfig props;
 
     private static final String ACCOUNTS_PATH = "/accounts";
@@ -33,11 +36,47 @@ public class AccountService {
                 tokenService.getBankToken(bankId), AccountsResponse.class);
         return response.accounts().stream()
                 .map(acc -> new AccountSummary(
-                        acc.accountId(), acc.status(), acc.currency(), acc.accountSubType(),
+                        acc.accountId(), bankId, acc.status(), acc.currency(), acc.accountSubType(),
                         acc.nickname(), acc.openingDate(), acc.accountReferences(),
                         getAccountBalance(bankId, acc.accountId())))
                 .toList();
     }
+    
+    public List<AccountSummary> getAccountsPrime(String bankId, String clientId) {
+        var accounts = getAccounts(bankId, clientId);
+        for (var account : accounts) {
+            accountRepository.findByAccountIdAndBankId(account.getAccountId(), bankId).ifPresent(accEntity -> {
+                account.setPurposeType(accEntity.getType());
+                account.setDescription(accEntity.getDescription());
+            });
+        }
+        return accounts;
+    } 
+    
+    public void setTypeForAccount(String bank_id, String account_id, PurposeType type) {
+        var account = accountRepository.findByAccountIdAndBankId(account_id, bank_id)
+                .orElseGet(() -> {
+                    var newAccount = new com.example.pbanking.model.Account();
+                    newAccount.setAccountId(account_id);
+                    newAccount.setBankId(bank_id);
+                    return newAccount;
+                });
+        account.setType(type);
+        accountRepository.save(account);
+    }
+    
+    public void setDescription(String bank_id, String account_id, String description) {
+        var account = accountRepository.findByAccountIdAndBankId(account_id, bank_id)
+                .orElseGet(() -> {
+                    var newAccount = new com.example.pbanking.model.Account();
+                    newAccount.setAccountId(account_id);
+                    newAccount.setBankId(bank_id);
+                    return newAccount;
+                });
+        account.setDescription(description);
+        accountRepository.save(account);
+    }
+    
 
     public BigDecimal getAccountBalance(String bankId, String accountId) {
         var headersMap = Map.of(

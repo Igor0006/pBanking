@@ -1,9 +1,11 @@
 package com.example.pbanking.model;
 
-import com.example.pbanking.model.enums.TransactionType;
+import com.example.pbanking.model.enums.PurposeType;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.Data;
@@ -16,5 +18,6 @@ public class Transaction {
     @Column(name = "transaction_id")
     private String transactionId;
 
-    private TransactionType type;
+    @Enumerated(EnumType.STRING)
+    private PurposeType type;
 }

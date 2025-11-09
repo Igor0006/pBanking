@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.pbanking.dto.request.MultiPaymentConsetApiRequest;
-import com.example.pbanking.dto.request.ProductConsentApiRequest;
 import com.example.pbanking.dto.request.SinglePaymentConsentApiRequest;
 import com.example.pbanking.dto.response.AccountConsentResponse;
 import com.example.pbanking.model.enums.ConsentType;
@@ -23,15 +22,15 @@ public class ConsentController {
     private final ConsentService consentService;
 
     @PostMapping("/account")
-    public ResponseEntity<AccountConsentResponse> getAccountConsent(@RequestBody AccountConsentApiRequest request) {
+    public ResponseEntity<String> getAccountConsent(@RequestBody AccountConsentApiRequest request) {
+        consentService.getReadConsent(request.bank_id(), request.client_id());
         return ResponseEntity.status(HttpStatus.ACCEPTED)
-                .body(consentService.getReadConsent(request.bank_id, request.client_id));
+                .body("Consent created");
     }
 
     public record AccountConsentApiRequest(String bank_id, String client_id) {
     }
 
-    
     @PostMapping("/singlePayment")
     public ResponseEntity<String> getSinglePaymentConsent(@RequestBody SinglePaymentConsentApiRequest request) {
         consentService.getPaymentConsent(request, ConsentType.SINGLE_USE);
@@ -44,10 +43,5 @@ public class ConsentController {
         return ResponseEntity.status(HttpStatus.CREATED).body("Consent created");
     }
 
-    @PostMapping("/product")
-    public ResponseEntity<String> getProductConsent(@RequestBody ProductConsentApiRequest request) {
-        consentService.getProductConsent(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body("Consent created");
-    }
 
 }

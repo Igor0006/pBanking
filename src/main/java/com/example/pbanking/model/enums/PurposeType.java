@@ -1,5 +1,5 @@
 package com.example.pbanking.model.enums;
 
-public enum TransactionType {
+public enum PurposeType {
     PERSONAL, BUSINESS, NONE
 }

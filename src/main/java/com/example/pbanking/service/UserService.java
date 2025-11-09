@@ -1,30 +1,60 @@
 package com.example.pbanking.service;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.example.pbanking.dto.BankClientLink;
 import com.example.pbanking.dto.request.AuthUserRequest;
 import com.example.pbanking.dto.response.AuthResponse;
+import com.example.pbanking.dto.response.UserInformation;
 import com.example.pbanking.exception.ConflictException;
 import com.example.pbanking.exception.NotFoundException;
 import com.example.pbanking.exception.UnauthorizedException;
 import com.example.pbanking.model.User;
+import com.example.pbanking.model.enums.UserStatus;
 import com.example.pbanking.repository.CredentialsRepository;
-import com.example.pbanking.repository.CredentialsRepository.BankClientPair;
+
+import jakarta.annotation.PostConstruct;
+import jakarta.transaction.Transactional;
+
 import com.example.pbanking.repository.UserRepository;
 
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
     private final CredentialsRepository credentialsRepository;
     private final JWTService jwtService;
     private final EncryptionService encryptionService;
+    @Value("${secret.team_secret}")
+    private String teamSecret;
+    
+    @PostConstruct
+    public void initAdmin() {
+        userRepository.findByUsername("admin")
+                .ifPresentOrElse(user -> {
+                    boolean requiresUpdate = user.getStatus() != UserStatus.ADMIN;
+                    String encodedSecret = encryptionService.encodePassword(teamSecret);
+                    if (!encryptionService.isValidPassword(teamSecret, user.getPassword())) {
+                        user.setPassword(encodedSecret);
+                        requiresUpdate = true;
+                    }
+                    if (requiresUpdate) {
+                        user.setStatus(UserStatus.ADMIN);
+                        userRepository.save(user);
+                    }
+                }, () -> {
+                    User admin = new User("admin", encryptionService.encodePassword(teamSecret), UserStatus.ADMIN);
+                    userRepository.save(admin);
+                });
+    }
 
     public User getCurrentUser() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -55,13 +85,32 @@ public class UserService {
         return new AuthResponse(token, jwtService.getExpirationTime());
     }
     
-    public List<BankClientPair> getUserClientIds() {
-        return credentialsRepository.findBankClientPairsByUser(getCurrentUser());
+    public UserInformation getUserInfo() {
+        var u = getCurrentUser();
+        return new UserInformation(getAllBankClientLinks(), u.getStatus(), u.getStatusExpireDate(), u.getName(), u.getSurname(), u.getUsername());
     }
 
     public List<BankClientLink> getAllBankClientLinks() {
         return credentialsRepository.findAllBankClientPairs().stream()
                 .map(pair -> new BankClientLink(pair.getBankId(), pair.getClientId()))
                 .toList();
+    }
+    
+    @Transactional
+    public void setStatus(UserStatus status, int days) {
+        User u = getCurrentUser();
+        u.setStatus(status);
+        if (status == UserStatus.PREMIUM)
+            u.setStatusExpireDate(Instant.now().plus(days, ChronoUnit.DAYS));
+        else {
+            u.setStatusExpireDate(null);
+        }
+    }
+    
+    @Transactional
+    public void setNameAndSurname(String name, String surname) {
+        User u = getCurrentUser();
+        u.setName(name);
+        u.setSurname(surname);
     }
 }

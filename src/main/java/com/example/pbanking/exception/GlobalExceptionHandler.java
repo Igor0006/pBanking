@@ -2,8 +2,6 @@ package com.example.pbanking.exception;
 
 import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -24,8 +22,6 @@ import jakarta.validation.ConstraintViolationException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-
-    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(ApiException.class)
     public ResponseEntity<ErrorResponse> handleApiException(ApiException ex, HttpServletRequest request) {
@@ -70,13 +66,6 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException ex, HttpServletRequest request) {
         ErrorResponse body = buildBody(HttpStatus.FORBIDDEN, ex.getMessage(), request, null);
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
-    }
-
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleUnhandled(Exception ex, HttpServletRequest request) {
-        log.error("Unexpected error processing request", ex);
-        ErrorResponse body = buildBody(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error", request, null);
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
     }
 
     private ErrorResponse buildBody(HttpStatus status, String message, HttpServletRequest request, String errorCode) {

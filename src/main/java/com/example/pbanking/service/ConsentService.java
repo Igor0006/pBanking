@@ -434,34 +434,34 @@ public class ConsentService {
     //     return resolveProductConsentValue(consent, bankId);
     // }
 
-    private String resolveProductConsentValue(ProductConsent consent, String bankId) {
-        if (consent.getStatus() == ConsentStatus.pending) {
-            String pendingId = encryptionService.decrypt(consent.getConsent());
-            String approvedConsent = checkProductConsentState(bankId, pendingId);
-            if (approvedConsent == null) {
-                throw new NotFoundException("Consent is not approved yet");
-            }
+    // private String resolveProductConsentValue(ProductConsent consent, String bankId) {
+    //     if (consent.getStatus() == ConsentStatus.pending) {
+    //         String pendingId = encryptionService.decrypt(consent.getConsent());
+    //         String approvedConsent = checkProductConsentState(bankId, pendingId);
+    //         if (approvedConsent == null) {
+    //             throw new NotFoundException("Consent is not approved yet");
+    //         }
 
-            consent.setConsent(approvedConsent);
-            productConsentRepository.save(consent);
-            return approvedConsent;
-        }
+    //         consent.setConsent(approvedConsent);
+    //         productConsentRepository.save(consent);
+    //         return approvedConsent;
+    //     }
 
-        try {
-            return encryptionService.decrypt(consent.getConsent());
-        } catch (RuntimeException ex) {
-            throw new NotFoundException(
-                    "Stored consent is invalid or expired for bank: " + bankId + ". Please request a new consent.");
-        }
-    }
+    //     try {
+    //         return encryptionService.decrypt(consent.getConsent());
+    //     } catch (RuntimeException ex) {
+    //         throw new NotFoundException(
+    //                 "Stored consent is invalid or expired for bank: " + bankId + ". Please request a new consent.");
+    //     }
+    // }
 
     public String checkPaymentConsentState(String bankId, String requestId) {
         return requestId;
     }
 
-    private String checkProductConsentState(String bankId, String requestId) {
-        return requestId;
-    }
+    // private String checkProductConsentState(String bankId, String requestId) {
+    //     return requestId;
+    // }
 
     public String checkConsentState(String bankId, String requestId) {
         String path = CHECK_CONSENT_PATH + "/" + requestId;
@@ -471,7 +471,7 @@ public class ConsentService {
                 path,
                 null,
                 headers,
-                null,
+                tokenService.getBankToken(bankId),
                 CheckAccountConsentResponse.class);
 
         CheckAccountConsentResponse.Data data = response.data();
