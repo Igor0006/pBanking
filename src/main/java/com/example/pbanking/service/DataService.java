@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 import com.example.pbanking.dto.BankClientLink;
 import com.example.pbanking.dto.response.StatisticReposnse;
 import com.example.pbanking.dto.response.TransactionsResponse;
-import com.example.pbanking.dto.response.TransactionsResponse.TransactionStatus;
 import com.example.pbanking.exception.NotFoundException;
 import com.example.pbanking.model.enums.PurposeType;
 import com.example.pbanking.repository.AccountRepository;

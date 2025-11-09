@@ -14,7 +14,8 @@ import lombok.Data;
     property = "consent_type"
 )
 @JsonSubTypes({
-    @JsonSubTypes.Type(value = SinglePaymentWithReceiverRequest.class, name = "single_use")
+    @JsonSubTypes.Type(value = SinglePaymentWithReceiverRequest.class, name = "single_use"),
+    @JsonSubTypes.Type(value = MultiPaymentConsentRequest.class, name = "multi_use")
 
 })
 public abstract class BasePaymentConsentRequestBody {

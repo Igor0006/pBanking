@@ -4,10 +4,12 @@ import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import com.example.pbanking.dto.request.BankPaymentRequest;
-import com.example.pbanking.dto.request.MakeSinglePaymentRequest;
+import com.example.pbanking.dto.request.MakePaymentRequest;
 import com.example.pbanking.dto.response.MakePaymentResponse;
 import com.example.pbanking.exception.NotFoundException;
 import com.example.pbanking.model.User;
@@ -30,8 +32,9 @@ public class PaymentService {
     private final MultiPaymentConsentRepository multiPaymentConsentRepository;
     private final WebClientExecutor wc;
     private static final String PAYMENT_PATH = "/payments";
+    private final static String defualtSchemeName = "RU.CBR.PAN";
 
-    public MakePaymentResponse makeSinglePayment(MakeSinglePaymentRequest request) {
+    public MakePaymentResponse makeSinglePayment(MakePaymentRequest request) {
         User user = userService.getCurrentUser();
 
         checkBalance(request);
@@ -57,7 +60,7 @@ public class PaymentService {
     }
 
     // TODO: проверка данных
-    public MakePaymentResponse useMultiUseConsent(User user, MakeSinglePaymentRequest request) {
+    public MakePaymentResponse useMultiUseConsent(User user, MakePaymentRequest request) {
         HashMap<String, String> kwargs = new HashMap<String, String>(Map.of(
                 "debtorAccount", request.debtor_account(),
                 "amount", request.amount().toString()));
@@ -72,7 +75,7 @@ public class PaymentService {
         return response;
     }
 
-    private MakePaymentResponse sendPaymentRequest(MakeSinglePaymentRequest request, String consent,
+    private MakePaymentResponse sendPaymentRequest(MakePaymentRequest request, String consent,
             BankPaymentRequest bankRequestBody, String clientId) {
         var headersMap = Map.of("x-payment-consent-id", consent);
 
@@ -83,17 +86,37 @@ public class PaymentService {
                 tokenService.getBankToken(request.debtor_bank()), MakePaymentResponse.class);
     }
 
-    private void checkBalance(MakeSinglePaymentRequest request) {
-        BigDecimal balance = accountService.getAccountBalance(request.debtor_bank(), request.accountId());
+    private void checkBalance(MakePaymentRequest request) {
+        BigDecimal balance;
+        try {
+            balance = accountService.getAccountBalance(request.debtor_bank(), request.accountId());
+        } catch (WebClientResponseException e) {
+            if (isConsentRequired(e)) {
+                throw new NotFoundException("Consent not found");
+            }
+            throw e;
+        }
         if (request.amount().compareTo(balance) >= 1) {
             throw new RuntimeException("Insufficient funds on the balance sheet");
         }
     }
 
-    private BankPaymentRequest getBankPaymentRequest(MakeSinglePaymentRequest request) {
-        BankPaymentRequest bankRequestBody = new BankPaymentRequest(request.amount(), request.currency(),
+    private boolean isConsentRequired(WebClientResponseException exception) {
+        if (exception == null || exception.getStatusCode() != HttpStatus.FORBIDDEN) {
+            return false;
+        }
+        String body = exception.getResponseBodyAsString();
+        return body != null && body.contains("\"error\":\"CONSENT_REQUIRED\"");
+    }
+
+    private BankPaymentRequest getBankPaymentRequest(MakePaymentRequest request) {
+        BankPaymentRequest bankRequestBody = new BankPaymentRequest(
+                request.amount(),
+                request.currency(),
                 request.debtor_account(),
-                request.creditor_account(), request.debtor_scheme(), request.creditor_scheme());
+                request.creditor_account(),
+                defualtSchemeName,
+                defualtSchemeName);
 
         if (request.creditor_bank().isPresent()) {
             bankRequestBody.setCreditorBank(request.creditor_bank().get());
@@ -102,7 +125,7 @@ public class PaymentService {
         return bankRequestBody;
     }
 
-    private String getClientId(User user, MakeSinglePaymentRequest request) {
+    private String getClientId(User user, MakePaymentRequest request) {
         String clientId = credentialsRepository.findClientIdByUserAndBank(user.getId(), request.debtor_bank())
                 .orElseThrow(() -> new NotFoundException(
                         "No client id for user: " + user.getUsername() + " and bank: " + request.debtor_bank()));

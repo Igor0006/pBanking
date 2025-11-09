@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.pbanking.dto.request.MakeSinglePaymentRequest;
+import com.example.pbanking.dto.request.MakePaymentRequest;
 import com.example.pbanking.service.PaymentService;
 
 import lombok.RequiredArgsConstructor;
@@ -18,7 +18,7 @@ public class PaymentController {
     private final PaymentService paymentService;
 
     @PostMapping()
-    public ResponseEntity<String> makePayment(@RequestBody MakeSinglePaymentRequest request) {
+    public ResponseEntity<String> makePayment(@RequestBody MakePaymentRequest request) {
         paymentService.makeSinglePayment(request);
         return ResponseEntity.ok().body("Payment created");
     }

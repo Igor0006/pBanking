@@ -4,13 +4,13 @@ import com.example.pbanking.model.enums.PurposeType;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
+import com.fasterxml.jackson.databind.JsonNode;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
@@ -125,6 +125,26 @@ public class TransactionsResponse {
         private String name;
         private String accountId;
         private String bankId;
+
+        @JsonCreator
+        public static Counterparty fromJson(JsonNode node) {
+            if (node == null || node.isNull()) {
+                return new Counterparty();
+            }
+            if (node.isTextual()) {
+                return new Counterparty(node.asText(), null, null, null);
+            }
+            Counterparty cp = new Counterparty();
+            cp.setCounterpartyId(text(node.get("counterpartyId")));
+            cp.setName(text(node.get("name")));
+            cp.setAccountId(text(node.get("accountId")));
+            cp.setBankId(text(node.get("bankId")));
+            return cp;
+        }
+
+        private static String text(JsonNode node) {
+            return (node == null || node.isNull()) ? null : node.asText();
+        }
     }
 
     public enum CreditDebitIndicator {
