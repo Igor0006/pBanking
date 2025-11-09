@@ -3,7 +3,7 @@ package com.example.pbanking.conroller;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.pbanking.dto.BankEntry;
-import com.example.pbanking.dto.response.AvailableProductsResponse.Product;
+import com.example.pbanking.dto.response.BankProductResponse;
 import com.example.pbanking.model.BankEntity;
 import com.example.pbanking.service.BankService;
 import com.example.pbanking.service.ProductService;
@@ -38,7 +38,7 @@ public class BankController {
     }
     
     @GetMapping("/availableProducts/{bank_id}")
-    public ResponseEntity<List<Product>> getAvailableProducts(@PathVariable String bank_id) {
+    public ResponseEntity<List<BankProductResponse>> getAvailableProducts(@PathVariable String bank_id) {
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(productService.getAvailableProducts(bank_id));
     }
     
