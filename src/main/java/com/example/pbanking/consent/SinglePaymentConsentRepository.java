@@ -11,7 +11,6 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.example.pbanking.bank.BankEntity;
-import com.example.pbanking.consent.SinglePaymentConsent;
 import com.example.pbanking.user.User;
 
 import jakarta.transaction.Transactional;

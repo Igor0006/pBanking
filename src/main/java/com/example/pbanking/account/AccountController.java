@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.pbanking.account.dto.AccountSummary;
 import com.example.pbanking.account.dto.request.UpdateDescriptionRequest;
 import com.example.pbanking.common.dto.UpdateTypeRequest;
-import com.example.pbanking.account.AccountService;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;

@@ -5,7 +5,6 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
-import com.example.pbanking.consent.AccountConsent;
 import com.example.pbanking.bank.BankEntity;
 import com.example.pbanking.user.User;
 

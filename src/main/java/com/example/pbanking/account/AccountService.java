@@ -9,8 +9,6 @@ import org.springframework.stereotype.Service;
 import com.example.pbanking.account.dto.AccountSummary;
 import com.example.pbanking.account.dto.response.AccountsResponse;
 import com.example.pbanking.account.dto.response.BalanceResponse;
-import com.example.pbanking.account.Account;
-import com.example.pbanking.account.AccountRepository;
 import com.example.pbanking.bank.BankTokenService;
 import com.example.pbanking.common.client.WebClientExecutor;
 import com.example.pbanking.common.enums.ConsentType;

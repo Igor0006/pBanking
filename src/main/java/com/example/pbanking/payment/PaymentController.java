@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.pbanking.payment.dto.request.MakePaymentRequest;
-import com.example.pbanking.payment.PaymentService;
 
 import lombok.RequiredArgsConstructor;
 

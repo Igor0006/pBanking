@@ -11,7 +11,6 @@ import com.example.pbanking.consent.dto.request.MultiPaymentConsetApiRequest;
 import com.example.pbanking.consent.dto.request.SinglePaymentConsentApiRequest;
 import com.example.pbanking.consent.dto.response.AccountConsentResponse;
 import com.example.pbanking.common.enums.ConsentType;
-import com.example.pbanking.consent.ConsentService;
 
 import lombok.RequiredArgsConstructor;
 

@@ -7,10 +7,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import com.example.pbanking.user.UserPrincipal;
-import com.example.pbanking.user.User;
 import com.example.pbanking.common.enums.UserStatus;
-import com.example.pbanking.user.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 

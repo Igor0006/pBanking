@@ -2,8 +2,6 @@ package com.example.pbanking.consent;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.example.pbanking.consent.ProductConsent;
-
 public interface ProductConsentRepository extends JpaRepository<ProductConsent, Long> {
 
 //     @Query("""

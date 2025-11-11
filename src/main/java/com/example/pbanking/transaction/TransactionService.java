@@ -12,8 +12,6 @@ import com.example.pbanking.common.enums.PurposeType;
 import com.example.pbanking.config.TPPConfig;
 import com.example.pbanking.consent.ConsentService;
 import com.example.pbanking.transaction.dto.response.TransactionsResponse;
-import com.example.pbanking.transaction.Transaction;
-import com.example.pbanking.transaction.TransactionRepository;
 
 import com.example.pbanking.exception.BadRequestException;
 import lombok.RequiredArgsConstructor;

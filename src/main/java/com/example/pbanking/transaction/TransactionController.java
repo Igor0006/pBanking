@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.pbanking.common.dto.UpdateTypeRequest;
 import com.example.pbanking.transaction.dto.response.TransactionsResponse;
 import com.example.pbanking.transaction.dto.response.TransactionsSummaryResponse;
-import com.example.pbanking.transaction.TransactionService;
 
 import lombok.RequiredArgsConstructor;
 

@@ -10,8 +10,6 @@ import com.example.pbanking.bank.dto.BankEntry;
 import com.example.pbanking.exception.ConflictException;
 import com.example.pbanking.exception.InternalServerException;
 import com.example.pbanking.exception.NotFoundException;
-import com.example.pbanking.bank.BankEntity;
-import com.example.pbanking.bank.BankRepository;
 import com.example.pbanking.common.security.EncryptionService;
 import com.example.pbanking.config.BanksProperties;
 

@@ -15,7 +15,6 @@ import com.example.pbanking.user.dto.request.AuthUserRequest;
 import com.example.pbanking.user.dto.response.AuthResponse;
 import com.example.pbanking.user.dto.response.UserInformation;
 import com.example.pbanking.common.enums.UserStatus;
-import com.example.pbanking.user.UserService;
 
 import lombok.AllArgsConstructor;
 

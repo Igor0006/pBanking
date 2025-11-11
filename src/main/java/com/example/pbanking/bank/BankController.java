@@ -4,9 +4,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.pbanking.bank.dto.BankEntry;
 import com.example.pbanking.bank.dto.response.BankProductResponse;
-import com.example.pbanking.bank.BankEntity;
-import com.example.pbanking.bank.BankService;
-import com.example.pbanking.bank.ProductService;
 
 import lombok.RequiredArgsConstructor;
 

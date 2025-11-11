@@ -31,15 +31,6 @@ import com.example.pbanking.consent.dto.request.SinglePaymentWithReceiverRequest
 import com.example.pbanking.consent.dto.response.AccountConsentResponse;
 import com.example.pbanking.consent.dto.response.CheckAccountConsentResponse;
 import com.example.pbanking.consent.dto.response.PaymentConsentResponse;
-import com.example.pbanking.consent.AccountConsent;
-import com.example.pbanking.consent.AccountConsentRepository;
-import com.example.pbanking.consent.CredentialsRepository;
-import com.example.pbanking.consent.MultiPaymentConsentRepository;
-import com.example.pbanking.consent.ProductConsentRepository;
-import com.example.pbanking.consent.SinglePaymentConsentRepository;
-import com.example.pbanking.consent.MultiPaymentConsent;
-import com.example.pbanking.consent.ProductConsent;
-import com.example.pbanking.consent.SinglePaymentConsent;
 import com.example.pbanking.exception.NotFoundException;
 import com.example.pbanking.user.User;
 import com.example.pbanking.user.UserService;

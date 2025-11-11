@@ -4,7 +4,6 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.example.pbanking.account.Account;
 
 
 public interface AccountRepository extends JpaRepository<Account, Account.AccountKey> {

@@ -18,12 +18,9 @@ import com.example.pbanking.user.dto.BankClientLink;
 import com.example.pbanking.user.dto.request.AuthUserRequest;
 import com.example.pbanking.user.dto.response.AuthResponse;
 import com.example.pbanking.user.dto.response.UserInformation;
-import com.example.pbanking.user.User;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.transaction.Transactional;
-
-import com.example.pbanking.user.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 
