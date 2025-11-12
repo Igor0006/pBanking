@@ -1,10 +1,7 @@
 package com.example.pbanking.consent;
 
 import java.math.BigDecimal;
-import java.time.Duration;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -29,7 +26,6 @@ import com.example.pbanking.consent.dto.request.ProductConsentRequest;
 import com.example.pbanking.consent.dto.request.SinglePaymentConsentApiRequest;
 import com.example.pbanking.consent.dto.request.SinglePaymentWithReceiverRequest;
 import com.example.pbanking.consent.dto.response.AccountConsentResponse;
-import com.example.pbanking.consent.dto.response.CheckAccountConsentResponse;
 import com.example.pbanking.consent.dto.response.PaymentConsentResponse;
 import com.example.pbanking.consent.dto.response.ProductConsentResponse;
 import com.example.pbanking.exception.NotFoundException;
@@ -44,7 +40,6 @@ import lombok.RequiredArgsConstructor;
 public class ConsentService {
 
     private static final String ACCOUNT_PATH = "/account-consents/request";
-    private static final String CHECK_CONSENT_PATH = "/account-consents";
     private static final String PAYMENT_PATH = "/payment-consents/request";
     private static final String PRODUCT_PATH = "/product-agreement-consents/request";
 
@@ -53,15 +48,16 @@ public class ConsentService {
     private final EncryptionService encryptionService;
     private final BankService bankService;
     private final CredentialsRepository credentialsRepository;
-    private final AccountConsentRepository accountConsentRepository;
     private final SinglePaymentConsentRepository singlePaymentConsentRepository;
     private final MultiPaymentConsentRepository multiPaymentConsentRepository;
     private final ProductConsentRepository productConsentRepository;
+    private final ConsentAccessService consentCacheService;
     private final TPPConfig tppConfig;
     private final BankTokenService tokenService;
 
     @Transactional
     public AccountConsentResponse getReadConsent(String bankId, String clientId) {
+        User user = userService.getCurrentUser();
         AccountConsentRequestBody requestBody = new AccountConsentRequestBody();
         requestBody.setClient_id(clientId);
         requestBody.setRequesting_bank(tppConfig.getRequestingBankId());
@@ -81,7 +77,7 @@ public class ConsentService {
                 tokenService.getBankToken(bankId),
                 AccountConsentResponse.class);
 
-        saveAccountConsent(response, bankId, clientId);
+        consentCacheService.saveAccountConsent(response, bankId, clientId, user);
         return response;
     }
 
@@ -155,7 +151,7 @@ public class ConsentService {
     public String getConsentForBank(String bankId, ConsentType consentType, Map<String, String> kwargs) {
         User user = userService.getCurrentUser();
         return switch (consentType) {
-            case READ -> resolveAccountConsent(bankId, user);
+            case READ -> consentCacheService.resolveAccountConsent(bankId, user);
             case SINGLE_USE -> resolveSingPaymentConsent(bankId, user, kwargs);
             case MULTI_USE -> resolveMultiPaymentConsent(bankId, user, kwargs);
             // case PRODUCT_READ -> resolveProductReadConsent(bankId, user, kwargs);
@@ -163,72 +159,6 @@ public class ConsentService {
             // case PRODUCT_CLOSE -> resolveProductCloseConsent(bankId, user, kwargs);
             default -> throw new NotFoundException("Unsupported consent type: " + consentType);
         };
-    }
-
-    private String resolveAccountConsent(String bankId, User user) {
-        BankEntity bank = bankService.getBankFromId(bankId);
-        AccountConsent consent = accountConsentRepository.findByUserAndBank(user, bank)
-                .orElseThrow(() -> new NotFoundException("Consent not found for bank: " + bank.getBankId()));
-        return resolveConsentValue(consent, bank.getBankId());
-    }
-
-    private String resolveConsentValue(AccountConsent consent, String bankId) {
-        if (consent.getStatus() == ConsentStatus.pending) {
-            String pendingId = encryptionService.decrypt(consent.getConsent());
-            String approvedConsent = checkConsentState(bankId, pendingId);
-            if (approvedConsent == null) {
-                throw new NotFoundException("Consent is not approved yet");
-            }
-
-            accountConsentRepository.delete(consent);
-            AccountConsent approved = cloneApprovedConsent(consent, approvedConsent);
-            accountConsentRepository.save(approved);
-            return approvedConsent;
-        }
-
-        try {
-            return encryptionService.decrypt(consent.getConsent());
-        } catch (RuntimeException ex) {
-            accountConsentRepository.delete(consent);
-            throw new NotFoundException(
-                    "Stored consent is invalid or expired for bank: " + bankId + ". Please request a new consent.");
-        }
-    }
-
-    private AccountConsent cloneApprovedConsent(AccountConsent source, String approvedConsent) {
-        AccountConsent clone = new AccountConsent();
-        clone.setBank(source.getBank());
-        clone.setUser(source.getUser());
-        clone.setStatus(ConsentStatus.approved);
-        clone.setExpirationDate(source.getExpirationDate());
-        clone.setClientId(source.getClientId());
-        clone.setConsent(encryptionService.encrypt(approvedConsent));
-        return clone;
-    }
-
-    private void saveAccountConsent(AccountConsentResponse response, String bankId, String clientId) {
-        User user = userService.getCurrentUser();
-        BankEntity bank = bankService.getBankFromId(bankId);
-
-        accountConsentRepository.findByUserAndBank(user, bank)
-                .ifPresent(accountConsentRepository::delete);
-
-        AccountConsent consent = new AccountConsent();
-        String consentValue = Boolean.TRUE.equals(response.auto_approved()) ? response.consent_id()
-                : response.request_id();
-
-        if (consentValue != null) {
-            consent.setConsent(encryptionService.encrypt(consentValue));
-        }
-
-        consent.setBank(bank);
-        consent.setUser(user);
-        consent.setStatus(ConsentStatus.valueOf(response.status().toLowerCase(Locale.ROOT)));
-        consent.setExpirationDate(
-                LocalDateTime.parse(response.created_at()).toInstant(ZoneOffset.UTC).plus(Duration.ofDays(90)));
-        consent.setClientId(clientId);
-
-        accountConsentRepository.save(consent);
     }
 
     private String resolveSingPaymentConsent(String bankId, User user, Map<String, String> kwargs) {
@@ -473,21 +403,4 @@ public class ConsentService {
     // return requestId;
     // }
 
-    public String checkConsentState(String bankId, String requestId) {
-        String path = CHECK_CONSENT_PATH + "/" + requestId;
-        Map<String, String> headers = Map.of("x-fapi-interaction-id", tppConfig.getRequestingBankId());
-        CheckAccountConsentResponse response = webClientExecutor.get(
-                bankId,
-                path,
-                null,
-                headers,
-                tokenService.getBankToken(bankId),
-                CheckAccountConsentResponse.class);
-
-        CheckAccountConsentResponse.Data data = response.data();
-        if (data != null && "Authorized".equalsIgnoreCase(data.status())) {
-            return data.consentId();
-        }
-        return null;
-    }
 }
