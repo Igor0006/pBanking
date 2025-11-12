@@ -3,6 +3,7 @@ package com.example.pbanking.consent;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -24,12 +25,18 @@ public interface MultiPaymentConsentRepository extends JpaRepository<MultiPaymen
 
     @Modifying
     @Transactional
-    @Query("""
-            update MultiPaymentConsent c set c.maxUses = c.maxUses - 1,
-            c.maxTotalAmount = c.maxTotalAmount - :amount where c.user = :user and
-            c.debtorAccount = :debtorAccount and c.maxUses > 0 and
-            c.maxAmountPerPayment >= :amount and c.maxTotalAmount >= :amount
-            """)
-    void markUsage(@Param("user") User user,
+    @Query(value = """
+        UPDATE multi_payment_consents
+        SET max_uses = max_uses - 1,
+            max_total_amount = max_total_amount - :amount 
+        WHERE consent_id = (
+            SELECT consent_id FROM multi_payment_consents 
+            WHERE debtor_account = :debtorAccount 
+            AND max_uses > 0 
+            AND max_amount_per_payment >= :amount 
+            AND max_total_amount >= :amount 
+            ORDER BY consent_id LIMIT 1)
+            """, nativeQuery = true)
+    void markUsage(
     @Param("debtorAccount") String debtorAccount, @Param("amount") BigDecimal amount);
 }

@@ -10,9 +10,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class BankPaymentRequest {
 
-    public BankPaymentRequest(BigDecimal amount, String currency, String debtorAccount, String creditorAccount, String debtorScheme, String creditorScheme) {
+    public BankPaymentRequest(BigDecimal amount, String currency, String debtorAccount, String creditorAccount, String debtorScheme, String creditorScheme, String comment) {
         this.data = new DataClass(new Initiation(new Amount(amount.toString(), currency), new Account(debtorScheme, debtorAccount),
-                new CreditorAccount(creditorScheme, creditorAccount)));
+                new CreditorAccount(creditorScheme, creditorAccount), comment));
     }
 
     private DataClass data;
@@ -59,5 +59,6 @@ public class BankPaymentRequest {
         private Amount instructedAmount;
         private Account debtorAccount;
         private CreditorAccount creditorAccount;
+        private String comment;
     }
 }

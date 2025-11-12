@@ -64,7 +64,6 @@ public class PaymentService {
         return response;
     }
 
-    // TODO: проверка данных
     public MakePaymentResponse useMultiUseConsent(User user, MakePaymentRequest request) {
         HashMap<String, String> kwargs = new HashMap<String, String>(Map.of(
                 "debtorAccount", request.debtor_account(),
@@ -75,7 +74,7 @@ public class PaymentService {
         BankPaymentRequest bankRequestBody = getBankPaymentRequest(request);
 
         MakePaymentResponse response = sendPaymentRequest(request, consent, bankRequestBody, clientId);
-        multiPaymentConsentRepository.markUsage(user, request.debtor_account(), request.amount());
+        multiPaymentConsentRepository.markUsage(request.debtor_account(), request.amount());
 
         return response;
     }
@@ -119,9 +118,7 @@ public class PaymentService {
                 request.amount(),
                 request.currency(),
                 request.debtor_account(),
-                request.creditor_account(),
-                defualtSchemeName,
-                defualtSchemeName);
+                request.creditor_account(), request.debtor_scheme(), request.creditor_scheme(), request.comment());
 
         if (request.creditor_bank().isPresent()) {
             bankRequestBody.setCreditorBank(request.creditor_bank().get());

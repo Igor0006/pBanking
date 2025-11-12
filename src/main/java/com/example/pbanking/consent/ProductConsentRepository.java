@@ -5,8 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface ProductConsentRepository extends JpaRepository<ProductConsent, Long> {
 
 //     @Query("""
-//             select c from ProductConsent c where c.user = :user and c.bank = :bank
-//             and c.readProductAgreements = true and :productType = any(allowedProductTypes) order by id limit 1
+//             
 //             """)
 //     Optional<ProductConsent> findProductReadConsent(@Param("user") User user, @Param("bank") BankEntity bank,
 //             @Param("productType") String productType);

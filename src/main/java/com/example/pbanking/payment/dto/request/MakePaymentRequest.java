@@ -11,7 +11,9 @@ public record MakePaymentRequest (
     Optional<String> creditor_bank,
     BigDecimal amount,
     String currency,
-    String reference
+    String comment,
+    String debtor_scheme,
+    String creditor_scheme
 ) {
     
 }
