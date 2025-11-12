@@ -11,7 +11,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.example.pbanking.service.JWTService;
+import com.example.pbanking.user.JWTService;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
