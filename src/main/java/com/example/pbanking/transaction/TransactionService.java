@@ -31,9 +31,9 @@ public class TransactionService {
     private final AccountRepository accountRepository;
     private final BankTokenService tokenService;
     private final WebClientExecutor wc;
-    private final ClassifierService classifierService;
     private final KafkaTemplate<String, TransactionDto> kafkaTemplate;
     private final UserService userService;
+    private final ClassifierApiService classifierApiService;
 
     @Value("${kafka.topics.manual:transactions.manual}")
     private String manualTopic;
@@ -78,11 +78,23 @@ public class TransactionService {
             if (transaction.getType() != null && transaction.getType() != PurposeType.NONE) {
                 continue;
             }
-            // if (predict) {
-            //     var type = classifierService.predictType(transaction);
-            //     setTypeForTransaction(transaction, type);
-            //     transaction.setType(type);
-            // }
+            if (!predict) {
+                continue;
+            }
+
+            var dto = TransactionDto.from(transaction);
+            if (dto == null) {
+                continue;
+            }
+
+            var predictedType = classifierApiService.predict(dto);
+            if (predictedType == null || predictedType == PurposeType.NONE) {
+                continue;
+            }
+
+            transaction.setType(predictedType);
+            dto.setType(predictedType);
+            setTypeForTransaction(dto, predictedType);
         }
         return response;
     }
