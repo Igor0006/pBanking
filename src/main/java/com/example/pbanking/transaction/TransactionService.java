@@ -2,6 +2,8 @@ package com.example.pbanking.transaction;
 
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import com.example.pbanking.account.AccountRepository;
@@ -12,7 +14,8 @@ import com.example.pbanking.common.enums.PurposeType;
 import com.example.pbanking.config.TPPConfig;
 import com.example.pbanking.consent.ConsentService;
 import com.example.pbanking.transaction.dto.response.TransactionsResponse;
-
+import com.example.pbanking.transaction.dto.response.TransactionsSummaryResponse.TransactionDto;
+import com.example.pbanking.user.UserService;
 import com.example.pbanking.exception.BadRequestException;
 import lombok.RequiredArgsConstructor;
 
@@ -29,6 +32,11 @@ public class TransactionService {
     private final BankTokenService tokenService;
     private final WebClientExecutor wc;
     private final ClassifierService classifierService;
+    private final KafkaTemplate<String, TransactionDto> kafkaTemplate;
+    private final UserService userService;
+
+    @Value("${kafka.topics.manual:transactions.manual}")
+    private String manualTopic;
         
     public TransactionsResponse getTransactions(String bankId, String accountId, Map<String, String> queryMap) {
         var headersMap = Map.of("x-consent-id", consentService.getConsentForBank(bankId, ConsentType.READ, null),
@@ -70,21 +78,22 @@ public class TransactionService {
             if (transaction.getType() != null && transaction.getType() != PurposeType.NONE) {
                 continue;
             }
-            if (predict) {
-                var type = classifierService.predictType(transaction);
-                setTypeForTransaction(transaction.getTransactionId(), type);
-                transaction.setType(type);
-            }
+            // if (predict) {
+            //     var type = classifierService.predictType(transaction);
+            //     setTypeForTransaction(transaction, type);
+            //     transaction.setType(type);
+            // }
         }
         return response;
     }
     
-    public void setTypeForTransaction(String transactionId, PurposeType type) {
+    public void setTypeForTransaction(TransactionDto transaction, PurposeType type) {
+        String transactionId = transaction.getTransactionId();
         if (transactionId == null || transactionId.isBlank()) {
             throw new BadRequestException("Transaction id must not be empty");
         }
 
-        var transaction = transactionRepository.findByTransactionId(transactionId)
+        var tr = transactionRepository.findByTransactionId(transactionId)
                 .orElseGet(() -> {
                     var newTransaction = new Transaction();
                     newTransaction.setTransactionId(transactionId);
@@ -92,8 +101,13 @@ public class TransactionService {
                     return newTransaction;
                 });
 
-        transaction.setType(type);
-        transaction.setTransactionId(transactionId);
-        transactionRepository.save(transaction);
+        tr.setType(type);
+        tr.setTransactionId(transactionId);
+        transactionRepository.save(tr);
+        sendToClassifierService(transaction);
+    }
+    
+    private void sendToClassifierService(TransactionDto tr) {
+        kafkaTemplate.send(manualTopic, userService.getCurrentUser().getId().toString(), tr);
     }
 }

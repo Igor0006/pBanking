@@ -4,9 +4,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.pbanking.common.dto.UpdateTypeRequest;
+import com.example.pbanking.common.enums.PurposeType;
 import com.example.pbanking.transaction.dto.response.TransactionsResponse;
 import com.example.pbanking.transaction.dto.response.TransactionsSummaryResponse;
+import com.example.pbanking.transaction.dto.response.TransactionsSummaryResponse.TransactionDto;
 
 import lombok.RequiredArgsConstructor;
 
@@ -53,9 +54,9 @@ public class TransactionController {
     
     @PostMapping("/setType")
     @Secured("ROLE_PREMIUM")
-    public ResponseEntity<Void> postMethodName(@RequestBody UpdateTypeRequest request) {
-        transactionService.setTypeForTransaction(request.id(), request.type());
-        return ResponseEntity.status(200).body(null);    
+    public ResponseEntity<Void> postMethodName(@RequestBody TransactionDto transaction, @RequestParam PurposeType type) {
+        transactionService.setTypeForTransaction(transaction, type);
+        return ResponseEntity.status(200).body(null);
     }
     
 }
