@@ -159,7 +159,7 @@ public class DataService {
     private void forEachTransaction(String from, String to, PurposeType typeFilter,
             Consumer<TransactionsResponse.Transaction> consumer) {
         Map<String, String> queryMap = Map.of("from_booking_date_time", from, "to_booking_date_time", to);
-        List<BankClientLink> links = userService.getAllBankClientLinks();
+        List<BankClientLink> links = userService.getBankClientLinks(userService.getCurrentUser());
         for (var link : links) {
             String bankId = link.bankId();
             List<AccountSummary> accounts;

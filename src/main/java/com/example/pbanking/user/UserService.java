@@ -90,12 +90,8 @@ public class UserService {
                 u.getUsername());
     }
 
-    private List<BankClientLink> getBankClientLinks(User user) {
+    public List<BankClientLink> getBankClientLinks(User user) {
         return toBankClientLinks(credentialsRepository.findBankClientPairsByUser(user));
-    }
-
-    public List<BankClientLink> getAllBankClientLinks() {
-        return toBankClientLinks(credentialsRepository.findAllBankClientPairs());
     }
 
     private List<BankClientLink> toBankClientLinks(List<CredentialsRepository.BankClientPair> pairs) {
