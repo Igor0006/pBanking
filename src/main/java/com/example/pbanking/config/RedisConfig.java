@@ -4,6 +4,9 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,10 +23,19 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 @EnableCaching
 public class RedisConfig {
 
+    private static final Logger LOG = LoggerFactory.getLogger(RedisConfig.class);
+
+    @Value("${spring.data.redis.host:localhost}")
+    private String redisHost;
+
+    @Value("${spring.data.redis.port:6379}")
+    private int redisPort;
+
     @Bean
     public RedisConnectionFactory redisConnectionFactory() {
-        // создает фабрику соеденений с Redis, Lettuce драйвер
-        return new LettuceConnectionFactory();
+        LOG.info("Initializing Redis connection factory for {}:{}", redisHost, redisPort);
+        // создает фабрику соединений с Redis с учетом настроек окружения
+        return new LettuceConnectionFactory(redisHost, redisPort);
     }
 
     @Bean
