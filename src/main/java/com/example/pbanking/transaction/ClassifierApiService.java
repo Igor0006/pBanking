@@ -27,13 +27,14 @@ public class ClassifierApiService {
     @Value("${classifier.service.url:http://localhost:8000}")
     private String classifierBaseUrl;
 
-    public PurposeType predict(TransactionDto transaction) {
-        if (transaction == null || transaction.getTransactionId() == null) {
+    public PurposeType predict(TransactionDto transaction, String userId) {
+        if (transaction == null || transaction.getTransactionId() == null || userId == null || userId.isBlank()) {
             return PurposeType.NONE;
         }
 
         var uri = UriComponentsBuilder.fromUriString(classifierBaseUrl)
                 .path(PREDICT_PATH)
+                .queryParam("userId", userId)
                 .build()
                 .toUri();
 

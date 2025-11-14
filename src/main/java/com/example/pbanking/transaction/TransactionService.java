@@ -52,6 +52,13 @@ public class TransactionService {
     
     public TransactionsResponse getTransactionsPrime(String bank_id, String account_id, Map<String, String> queryMap, boolean predict) {
         var response = getTransactions(bank_id, account_id, queryMap);
+        String currentUserId = null;
+        if (predict) {
+            var currentUser = userService.getCurrentUser();
+            if (currentUser != null && currentUser.getId() != null) {
+                currentUserId = currentUser.getId().toString();
+            }
+        }
         for (var transaction : response.transactions()) {
             if (transaction.getType() != null && transaction.getType() != PurposeType.NONE) {
                 continue;
@@ -78,7 +85,7 @@ public class TransactionService {
             if (transaction.getType() != null && transaction.getType() != PurposeType.NONE) {
                 continue;
             }
-            if (!predict) {
+            if (!predict || currentUserId == null) {
                 continue;
             }
 
@@ -87,7 +94,7 @@ public class TransactionService {
                 continue;
             }
 
-            var predictedType = classifierApiService.predict(dto);
+            var predictedType = classifierApiService.predict(dto, currentUserId);
             if (predictedType == null || predictedType == PurposeType.NONE) {
                 continue;
             }
@@ -116,6 +123,8 @@ public class TransactionService {
         tr.setType(type);
         tr.setTransactionId(transactionId);
         transactionRepository.save(tr);
+        
+        transaction.setType(type);
         sendToClassifierService(transaction);
     }
     
