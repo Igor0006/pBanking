@@ -33,7 +33,7 @@ public class UserService {
     private final EncryptionService encryptionService;
     @Value("${secret.team_secret}")
     private String teamSecret;
-    
+
     @PostConstruct
     public void initAdmin() {
         userRepository.findByUsername("admin")
@@ -73,7 +73,7 @@ public class UserService {
 
     public AuthResponse loginUser(AuthUserRequest request) {
         User user = userRepository.findByUsername(request.username())
-        .orElseThrow(() -> new UnauthorizedException("Invalid username or password"));
+                .orElseThrow(() -> new UnauthorizedException("Invalid username or password"));
 
         if (!encryptionService.isValidPassword(request.password(), user.getPassword())) {
             throw new UnauthorizedException("Invalid username or password");
@@ -82,18 +82,28 @@ public class UserService {
         String token = jwtService.generateToken(request.username());
         return new AuthResponse(token, jwtService.getExpirationTime());
     }
-    
+
     public UserInformation getUserInfo() {
         var u = getCurrentUser();
-        return new UserInformation(getAllBankClientLinks(), u.getStatus(), u.getStatusExpireDate(), u.getName(), u.getSurname(), u.getUsername());
+        var bankClientLinks = getBankClientLinks(u);
+        return new UserInformation(bankClientLinks, u.getStatus(), u.getStatusExpireDate(), u.getName(), u.getSurname(),
+                u.getUsername());
+    }
+
+    private List<BankClientLink> getBankClientLinks(User user) {
+        return toBankClientLinks(credentialsRepository.findBankClientPairsByUser(user));
     }
 
     public List<BankClientLink> getAllBankClientLinks() {
-        return credentialsRepository.findAllBankClientPairs().stream()
+        return toBankClientLinks(credentialsRepository.findAllBankClientPairs());
+    }
+
+    private List<BankClientLink> toBankClientLinks(List<CredentialsRepository.BankClientPair> pairs) {
+        return pairs.stream()
                 .map(pair -> new BankClientLink(pair.getBankId(), pair.getClientId()))
                 .toList();
     }
-    
+
     @Transactional
     public void setStatus(UserStatus status, int days) {
         User u = getCurrentUser();
@@ -104,7 +114,7 @@ public class UserService {
             u.setStatusExpireDate(null);
         }
     }
-    
+
     @Transactional
     public void setNameAndSurname(String name, String surname) {
         User u = getCurrentUser();
